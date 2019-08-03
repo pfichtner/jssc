@@ -21,7 +21,7 @@ matrix:
       addons:
         apt:
           packages:
-            - cmake3
+            - cmake
             - g++-multilib
     - os: linux
       env: PROFILE=mingw32
