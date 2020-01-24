@@ -134,8 +134,8 @@
                             <skip>${plugin.animalsniffer.skip}</skip>
                             <signature>
                                 <groupId>org.codehaus.mojo.signature</groupId>
-                                <artifactId>java17</artifactId>
-                                <version>1.0</version>
+                                <artifactId>java16</artifactId>
+                                <version>1.1</version>
                             </signature>
                         </configuration>
                     </execution>
