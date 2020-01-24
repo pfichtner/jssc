@@ -24,6 +24,8 @@
  */
 package jssc;
 
+import io.github.java_native.jssc.header.SerialNativeInterface;
+
 import java.io.File;
 import java.util.Comparator;
 import java.util.TreeSet;
@@ -35,7 +37,7 @@ import java.util.regex.Pattern;
  */
 public class SerialPortList {
 
-    private static SerialNativeInterface serialInterface;
+    private static final SerialNativeInterface serialInterface;
     private static final Pattern PORTNAMES_REGEXP;
     private static final String PORTNAMES_PATH;
 
@@ -74,24 +76,24 @@ public class SerialPortList {
     private static final Comparator<String> PORTNAMES_COMPARATOR = new Comparator<String>() {
 
         @Override
-        public int compare(String valueA, String valueB) {
+        public int compare(final String valueA, final String valueB) {
 
             if(valueA.equalsIgnoreCase(valueB)){
                 return valueA.compareTo(valueB);
             }
 
-            int minLength = Math.min(valueA.length(), valueB.length());
+            final int minLength = Math.min(valueA.length(), valueB.length());
 
             int shiftA = 0;
             int shiftB = 0;
 
             for(int i = 0; i < minLength; i++){
-                char charA = valueA.charAt(i - shiftA);
-                char charB = valueB.charAt(i - shiftB);
+                final char charA = valueA.charAt(i - shiftA);
+                final char charB = valueB.charAt(i - shiftB);
                 if(charA != charB){
                     if(Character.isDigit(charA) && Character.isDigit(charB)){
-                        int[] resultsA = getNumberAndLastIndex(valueA, i - shiftA);
-                        int[] resultsB = getNumberAndLastIndex(valueB, i - shiftB);
+                        final int[] resultsA = getNumberAndLastIndex(valueA, i - shiftA);
+                        final int[] resultsB = getNumberAndLastIndex(valueB, i - shiftB);
 
                         if(resultsA[0] != resultsB[0]){
                             return resultsA[0] - resultsB[0];
@@ -132,12 +134,12 @@ public class SerialPortList {
          * <b>returnArray[0] = 123</b><br>
          * <b>returnArray[1] = 10</b><br>
          */
-        private int[] getNumberAndLastIndex(String str, int startIndex) {
+        private int[] getNumberAndLastIndex(final String str, final int startIndex) {
             String numberValue = "";
-            int[] returnValues = {-1, startIndex};
+            final int[] returnValues = {-1, startIndex};
             for(int i = startIndex; i < str.length(); i++){
                 returnValues[1] = i;
-                char c = str.charAt(i);
+                final char c = str.charAt(i);
                 if(Character.isDigit(c)){
                     numberValue += c;
                 }
@@ -148,7 +150,7 @@ public class SerialPortList {
             try {
                 returnValues[0] = Integer.valueOf(numberValue);
             }
-            catch (Exception ex) {
+            catch (final Exception ex) {
                 //Do nothing
             }
             return returnValues;
@@ -191,7 +193,7 @@ public class SerialPortList {
      *
      * @since 2.3.0
      */
-    public static String[] getPortNames(String searchPath) {
+    public static String[] getPortNames(final String searchPath) {
         return getPortNames(searchPath, PORTNAMES_REGEXP, PORTNAMES_COMPARATOR);
     }
 
@@ -204,7 +206,7 @@ public class SerialPortList {
      *
      * @since 2.3.0
      */
-    public static String[] getPortNames(Pattern pattern) {
+    public static String[] getPortNames(final Pattern pattern) {
         return getPortNames(PORTNAMES_PATH, pattern, PORTNAMES_COMPARATOR);
     }
 
@@ -217,7 +219,7 @@ public class SerialPortList {
      *
      * @since 2.3.0
      */
-    public static String[] getPortNames(Comparator<String> comparator) {
+    public static String[] getPortNames(final Comparator<String> comparator) {
         return getPortNames(PORTNAMES_PATH, PORTNAMES_REGEXP, comparator);
     }
 
@@ -235,7 +237,7 @@ public class SerialPortList {
      *
      * @since 2.3.0
      */
-    public static String[] getPortNames(String searchPath, Pattern pattern) {
+    public static String[] getPortNames(final String searchPath, final Pattern pattern) {
         return getPortNames(searchPath, pattern, PORTNAMES_COMPARATOR);
     }
 
@@ -253,7 +255,7 @@ public class SerialPortList {
      *
      * @since 2.3.0
      */
-    public static String[] getPortNames(String searchPath, Comparator<String> comparator) {
+    public static String[] getPortNames(final String searchPath, final Comparator<String> comparator) {
         return getPortNames(searchPath, PORTNAMES_REGEXP, comparator);
     }
 
@@ -267,7 +269,7 @@ public class SerialPortList {
      *
      * @since 2.3.0
      */
-    public static String[] getPortNames(Pattern pattern, Comparator<String> comparator) {
+    public static String[] getPortNames(final Pattern pattern, final Comparator<String> comparator) {
         return getPortNames(PORTNAMES_PATH, pattern, comparator);
     }
 
@@ -286,7 +288,7 @@ public class SerialPortList {
      *
      * @since 2.3.0
      */
-    public static String[] getPortNames(String searchPath, Pattern pattern, Comparator<String> comparator) {
+    public static String[] getPortNames(final String searchPath, final Pattern pattern, final Comparator<String> comparator) {
         if(searchPath == null || pattern == null || comparator == null){
             return new String[]{};
         }
@@ -301,13 +303,13 @@ public class SerialPortList {
      *
      * @since 2.3.0
      */
-    private static String[] getWindowsPortNames(Pattern pattern, Comparator<String> comparator) {
-        String[] portNames = serialInterface.getSerialPortNames();
+    private static String[] getWindowsPortNames(final Pattern pattern, final Comparator<String> comparator) {
+        final String[] portNames = serialInterface.getSerialPortNames();
         if(portNames == null){
             return new String[]{};
         }
-        TreeSet<String> ports = new TreeSet<String>(comparator);
-        for(String portName : portNames){
+        final TreeSet<String> ports = new TreeSet<String>(comparator);
+        for(final String portName : portNames){
             if(pattern.matcher(portName).find()){
                 ports.add(portName);
             }
@@ -318,19 +320,19 @@ public class SerialPortList {
     /**
      * Universal method for getting port names of _nix based systems
      */
-    private static String[] getUnixBasedPortNames(String searchPath, Pattern pattern, Comparator<String> comparator) {
+    private static String[] getUnixBasedPortNames(String searchPath, final Pattern pattern, final Comparator<String> comparator) {
         searchPath = (searchPath.equals("") ? searchPath : (searchPath.endsWith("/") ? searchPath : searchPath + "/"));
         String[] returnArray = new String[]{};
-        File dir = new File(searchPath);
+        final File dir = new File(searchPath);
         if(dir.exists() && dir.isDirectory()){
-            File[] files = dir.listFiles();
+            final File[] files = dir.listFiles();
             if(files.length > 0){
-                TreeSet<String> portsTree = new TreeSet<String>(comparator);
-                for(File file : files){
-                    String fileName = file.getName();
+                final TreeSet<String> portsTree = new TreeSet<String>(comparator);
+                for(final File file : files){
+                    final String fileName = file.getName();
                     if(!file.isDirectory() && !file.isFile() && pattern.matcher(fileName).find()){
-                        String portName = searchPath + fileName;
-                        long portHandle = serialInterface.openPort(portName, false);//Open port without TIOCEXCL
+                        final String portName = searchPath + fileName;
+                        final long portHandle = serialInterface.openPort(portName, false);//Open port without TIOCEXCL
                         if(portHandle < 0 && portHandle != SerialNativeInterface.ERR_PORT_BUSY){
                             continue;
                         }

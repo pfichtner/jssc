@@ -1,0 +1,465 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ GNU Lesser General Public License v3.0
+  ~ Copyright (C) 2020
+  ~
+  ~ This program is free software; you can redistribute it and/or
+  ~ modify it under the terms of the GNU Lesser General Public
+  ~ License as published by the Free Software Foundation; either
+  ~ version 3 of the License, or (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  ~ Lesser General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Lesser General Public License
+  ~ along with this program; if not, write to the Free Software Foundation,
+  ~ Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+  -->
+
+<project
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="http://maven.apache.org/POM/4.0.0"
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.github.java-native.jssc</groupId>
+        <artifactId>jssc-parent</artifactId>
+        <version>5.0.0-SNAPSHOT</version>
+        <relativePath>../parent/pom.xml</relativePath>
+    </parent>
+
+    <artifactId>jssc-lib</artifactId>
+
+    <packaging>jar</packaging>
+    <name>jssc library</name>
+
+    <properties>
+        <!-- profile-dependant flags a-z -->
+        <cmake.compile.skip>false</cmake.compile.skip>
+        <cmake.build.args></cmake.build.args>
+        <cmake.generate.args></cmake.generate.args>
+        <cmake.generate.extra></cmake.generate.extra>
+        <cmake.generate.skip>false</cmake.generate.skip>
+        <javah.skip>false</javah.skip>
+        <jar.dependencies.skip>true</jar.dependencies.skip>
+        <maven.assembly.id>${os.detected.name}-${os.detected.arch}-${os.detected.bitness}</maven.assembly.id>
+        <!-- TODO: remove "os.detected.bitness"; already defined os-maven-plugin 1.6.3+ -->
+        <os.detected.bitness>${sun.arch.data.model}</os.detected.bitness>
+
+        <!-- dependency versions a-z -->
+        <dependency.junit.version>4.12</dependency.junit.version>
+        <dependency.logback.version>1.2.3</dependency.logback.version>
+        <dependency.nativelibloader.version>2.3.3</dependency.nativelibloader.version>
+
+        <!-- plugin versions a-z -->
+
+        <plugin.antrun.version>1.8</plugin.antrun.version>
+        <plugin.nar.version>3.6.0</plugin.nar.version>
+        <plugin.osmaven.version>1.6.2</plugin.osmaven.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.github.java-native.jssc</groupId>
+            <artifactId>jssc-header</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.scijava</groupId>
+            <artifactId>native-lib-loader</artifactId>
+            <version>${dependency.nativelibloader.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${dependency.junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>${dependency.logback.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <resources>
+            <resource>
+                <directory>${project.basedir}/src/main/resources-precompiled</directory>
+            </resource>
+        </resources>
+
+        <extensions>
+            <extension>
+                <groupId>kr.motd.maven</groupId>
+                <artifactId>os-maven-plugin</artifactId>
+                <version>${plugin.osmaven.version}</version>
+            </extension>
+        </extensions>
+
+        <plugins>
+            <!-- create header file jdk<=8 -->
+            <plugin>
+                <groupId>com.github.maven-nar</groupId>
+                <artifactId>nar-maven-plugin</artifactId>
+                <version>${plugin.nar.version}</version>
+                <extensions>true</extensions>
+                <executions>
+                    <execution>
+                        <id>default-nar-javah</id>
+                        <goals>
+                            <goal>nar-javah</goal>
+                        </goals>
+                        <!-- was compile -->
+                        <phase>none</phase>
+                        <configuration>
+                            <skip>${javah.skip}</skip>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- execute cmake -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+
+                <executions>
+                    <execution>
+                        <id>cmake-generate</id>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <phase>generate-sources</phase>
+                        <configuration>
+                            <skip>${cmake.generate.skip}</skip>
+                            <target name="cmake-generate">
+                                <mkdir dir="${cmake.generated.directory}"/>
+                                <exec executable="cmake" dir="${cmake.generated.directory}" failonerror="true">
+                                    <arg line="${project.basedir}"/>
+                                    <arg line="${cmake.generate.args}"/>
+                                    <arg line="${cmake.generate.extra}"/>
+                                </exec>
+                            </target>
+                        </configuration>
+                    </execution>
+
+                    <execution>
+                        <id>cmake-compile</id>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <phase>none</phase>
+                        <configuration>
+                            <skip>${cmake.compile.skip}</skip>
+                            <target name="cmake-build">
+                                <!-- copy header jdk<=8 -->
+                                <copy todir="${cmake.generated.directory}" flatten="true" overwrite="true"
+                                      verbose="true" failonerror="false">
+                                    <fileset dir="${project.build.directory}/nar/" includes="**/*.h"/>
+                                </copy>
+                                <exec executable="cmake" dir="${cmake.generated.directory}" failonerror="true">
+                                    <arg line="--build"/>
+                                    <arg line="."/>
+                                    <arg line="${cmake.build.args}"/>
+                                </exec>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <doclint>none</doclint>
+                    <!-- workaround for https://bugs.openjdk.java.net/browse/JDK-8212233 -->
+                    <javaApiLinks>
+                        <property>
+                            <name>foo</name>
+                            <value>bar</value>
+                        </property>
+                    </javaApiLinks>
+                </configuration>
+            </plugin>
+
+            <!-- package the uber-jar -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <phase>none</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <skipAssembly>${cmake.generate.skip}</skipAssembly>
+                            <descriptors>
+                                <descriptor>${project.basedir}/src/assembly/one-off-jar.xml</descriptor>
+                            </descriptors>
+                        </configuration>
+                    </execution>
+
+                    <execution>
+                        <id>fat-jar</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <skipAssembly>${jar.dependencies.skip}</skipAssembly>
+                            <descriptorRefs>
+                                <descriptorRef>jar-with-dependencies</descriptorRef>
+                            </descriptorRefs>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+        </plugins>
+    </build>
+
+    <profiles>
+
+        <!-- collect existing native libraries for a distribution; skips native compilation -->
+        <profile>
+            <id>package</id>
+            <properties>
+                <javah.skip>true</javah.skip>
+                <maven.test.skip>true</maven.test.skip>
+                <cmake.generate.skip>true</cmake.generate.skip>
+                <cmake.compile.skip>true</cmake.compile.skip>
+            </properties>
+
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>jar-with-dependencies</id>
+            <properties>
+                <jar.dependencies.skip>false</jar.dependencies.skip>
+            </properties>
+        </profile>
+
+        <!-- cmake linux 32-bit profile -->
+        <profile>
+            <id>m32</id>
+            <properties>
+                <os.detected.arch>x86_32</os.detected.arch>
+                <os.detected.bitness>32</os.detected.bitness>
+                <!-- skip test on cross-compile -->
+                <maven.test.skip>true</maven.test.skip>
+                <cmake.generate.args>-DNATIVE_LIB_DIR=${os.detected.name}_${os.detected.bitness}</cmake.generate.args>
+                <cmake.generate.extra>-DFORCE_M32=True</cmake.generate.extra>
+            </properties>
+        </profile>
+
+        <!-- cmake linux 64-bit profile -->
+        <profile>
+            <id>m64</id>
+            <properties>
+                <os.detected.arch>x86_64</os.detected.arch>
+                <os.detected.bitness>64</os.detected.bitness>
+                <!-- skip test on cross-compile -->
+                <maven.test.skip>true</maven.test.skip>
+                <cmake.generate.args>-DNATIVE_LIB_DIR=${os.detected.name}_${os.detected.bitness}</cmake.generate.args>
+                <cmake.generate.extra>-DFORCE_M64=True</cmake.generate.extra>
+            </properties>
+        </profile>
+
+        <!-- cmake windows-amd64 profile -->
+        <profile>
+            <id>win64</id>
+            <activation>
+                <os>
+                    <family>Windows</family>
+                    <arch>amd64</arch>
+                </os>
+            </activation>
+            <properties>
+                <cmake.generate.args>-DCMAKE_GENERATOR_PLATFORM=x64
+                    -DNATIVE_LIB_DIR=${os.detected.name}_${os.detected.bitness}
+                </cmake.generate.args>
+                <cmake.build.args>--config Release</cmake.build.args>
+            </properties>
+        </profile>
+
+        <!-- cmake windows-x86 profile -->
+        <profile>
+            <id>win32</id>
+            <activation>
+                <os>
+                    <family>Windows</family>
+                    <arch>x86</arch>
+                </os>
+            </activation>
+            <properties>
+                <cmake.generate.args>-DNATIVE_LIB_DIR=${os.detected.name}_${os.detected.bitness}</cmake.generate.args>
+                <cmake.build.args>--config Release</cmake.build.args>
+            </properties>
+        </profile>
+
+        <!-- cmake mingw32 profile -->
+        <profile>
+            <id>mingw32</id>
+            <properties>
+                <os.detected.name>windows</os.detected.name>
+                <os.detected.arch>x86_32</os.detected.arch>
+                <os.detected.bitness>32</os.detected.bitness>
+                <!-- skip test on cross-compile -->
+                <maven.test.skip>true</maven.test.skip>
+                <cmake.generate.args>-DCMAKE_TOOLCHAIN_FILE=toolchain/Mingw${os.detected.bitness}.cmake
+                    -DNATIVE_LIB_DIR=${os.detected.name}_${os.detected.bitness}
+                </cmake.generate.args>
+            </properties>
+        </profile>
+
+        <!-- cmake mingw64 profile -->
+        <profile>
+            <id>mingw64</id>
+            <properties>
+                <os.detected.name>windows</os.detected.name>
+                <os.detected.arch>x86_64</os.detected.arch>
+                <os.detected.bitness>64</os.detected.bitness>
+                <!-- skip test on cross-compile -->
+                <maven.test.skip>true</maven.test.skip>
+                <cmake.generate.args>-DCMAKE_TOOLCHAIN_FILE=toolchain/Mingw${os.detected.bitness}.cmake
+                    -DNATIVE_LIB_DIR=${os.detected.name}_${os.detected.bitness}
+                </cmake.generate.args>
+            </properties>
+        </profile>
+
+        <!-- cmake arm soft float profile -->
+        <profile>
+            <id>armsf</id>
+            <properties>
+                <os.detected.name>linux</os.detected.name>
+                <os.detected.arch>arm_32</os.detected.arch>
+                <os.detected.bitness>32</os.detected.bitness>
+                <!-- skip test on cross-compile -->
+                <maven.test.skip>true</maven.test.skip>
+                <cmake.generate.args>-DCMAKE_TOOLCHAIN_FILE=toolchain/Armsf.cmake
+                    -DNATIVE_LIB_DIR=${os.detected.name}_arm
+                </cmake.generate.args>
+            </properties>
+        </profile>
+
+        <!-- cmake arm hard float profile -->
+        <profile>
+            <id>armhf</id>
+            <properties>
+                <os.detected.name>linux</os.detected.name>
+                <os.detected.arch>arm_32</os.detected.arch>
+                <os.detected.bitness>32</os.detected.bitness>
+                <!-- skip test on cross-compile -->
+                <maven.test.skip>true</maven.test.skip>
+                <!-- TODO: namespace conflict with arm soft float library -->
+                <cmake.generate.args>-DCMAKE_TOOLCHAIN_FILE=toolchain/Armhf.cmake
+                    -DNATIVE_LIB_DIR=${os.detected.name}_arm
+                </cmake.generate.args>
+            </properties>
+        </profile>
+
+        <!-- cmake arm 64-bit -->
+        <profile>
+            <id>aarch64</id>
+            <properties>
+                <os.detected.name>linux</os.detected.name>
+                <os.detected.arch>aarch_64</os.detected.arch>
+                <os.detected.bitness>64</os.detected.bitness>
+                <!-- skip test on cross-compile -->
+                <maven.test.skip>true</maven.test.skip>
+                <cmake.generate.args>-DCMAKE_TOOLCHAIN_FILE=toolchain/Aarch64.cmake
+                    -DNATIVE_LIB_DIR=${os.detected.name}_arm64
+                </cmake.generate.args>
+            </properties>
+        </profile>
+
+        <!-- cmake powerpc profile -->
+        <profile>
+            <id>ppc64</id>
+            <properties>
+                <os.detected.name>linux</os.detected.name>
+                <os.detected.arch>ppc_64</os.detected.arch>
+                <os.detected.bitness>64</os.detected.bitness>
+                <!-- skip test on cross-compile -->
+                <maven.test.skip>true</maven.test.skip>
+                <cmake.generate.args>-DCMAKE_TOOLCHAIN_FILE=toolchain/Ppc64.cmake
+                    -DNATIVE_LIB_DIR=${os.detected.name}_ppc
+                </cmake.generate.args>
+            </properties>
+        </profile>
+
+        <!-- cmake arm trusty profile -->
+        <profile>
+            <id>armtrusty</id>
+            <properties>
+                <!-- trusty didn't have g++-5, etc -->
+                <cmake.generate.extra>-DSKIP_COMPILER_VERSION=True</cmake.generate.extra>
+            </properties>
+        </profile>
+
+        <!-- fix arm output directories -->
+        <!-- TODO: remove "arm-fix32", "arm-fix64" native-lib-loader 2.4.0+ -->
+        <profile>
+            <id>arm-fix32</id>
+            <activation>
+                <os>
+                    <arch>arm</arch>
+                </os>
+            </activation>
+            <properties>
+                <cmake.generate.extra>-DNATIVE_LIB_DIR=${os.detected.name}_arm</cmake.generate.extra>
+            </properties>
+        </profile>
+        <profile>
+            <id>arm-fix64</id>
+            <activation>
+                <os>
+                    <arch>aarch64</arch>
+                </os>
+            </activation>
+            <properties>
+                <cmake.generate.extra>-DNATIVE_LIB_DIR=${os.detected.name}_arm64</cmake.generate.extra>
+            </properties>
+        </profile>
+    </profiles>
+</project>

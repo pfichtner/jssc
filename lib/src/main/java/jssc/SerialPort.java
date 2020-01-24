@@ -24,9 +24,10 @@
  */
 package jssc;
 
+import io.github.java_native.jssc.header.SerialNativeInterface;
+
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
-import java.nio.charset.Charset;
 
 /**
  *
@@ -34,10 +35,10 @@ import java.nio.charset.Charset;
  */
 public class SerialPort {
 
-    private SerialNativeInterface serialInterface;
+    private final SerialNativeInterface serialInterface;
     private SerialPortEventListener eventListener;
     private long portHandle;
-    private String portName;
+    private final String portName;
     private boolean portOpened = false;
     private boolean maskAssigned = false;
     private boolean eventListenerAdded = false;
@@ -115,9 +116,9 @@ public class SerialPort {
     private static final int PARAMS_FLAG_PARMRK = 2;
     //<- since 2.6.0
 
-    public SerialPort(String portName) {
+    public SerialPort(final String portName) {
         this.portName = portName;
-        serialInterface = new SerialNativeInterface();
+        this.serialInterface = new SerialNativeInterface();
     }
 
     /**
@@ -126,7 +127,7 @@ public class SerialPort {
      * @return Method returns port name under operation as a String
      */
     public String getPortName(){
-        return portName;
+        return this.portName;
     }
 
     /**
@@ -135,7 +136,7 @@ public class SerialPort {
      * @return Method returns true if port is open, otherwise false
      */
     public boolean isOpened() {
-        return portOpened;
+        return this.portOpened;
     }
 
     /**
@@ -149,36 +150,32 @@ public class SerialPort {
      * @throws SerialPortException
      */
     public boolean openPort() throws SerialPortException {
-        if(portOpened){
-            throw new SerialPortException(portName, "openPort()", SerialPortException.TYPE_PORT_ALREADY_OPENED);
+        if (this.portOpened) {
+            throw new SerialPortException(this.portName, "openPort()", SerialPortException.TYPE_PORT_ALREADY_OPENED);
         }
-        if(portName != null){
-            boolean useTIOCEXCL = (System.getProperty(SerialNativeInterface.PROPERTY_JSSC_NO_TIOCEXCL) == null &&
-                                   System.getProperty(SerialNativeInterface.PROPERTY_JSSC_NO_TIOCEXCL.toLowerCase()) == null);
-            portHandle = serialInterface.openPort(portName, useTIOCEXCL);//since 2.3.0 -> (if JSSC_NO_TIOCEXCL defined, exclusive lock for serial port will be disabled)
+        if (this.portName != null) {
+            final boolean useTIOCEXCL = (System.getProperty(SerialNativeInterface.PROPERTY_JSSC_NO_TIOCEXCL) == null &&
+                    System.getProperty(SerialNativeInterface.PROPERTY_JSSC_NO_TIOCEXCL.toLowerCase()) == null);
+            this.portHandle = this.serialInterface.openPort(this.portName, useTIOCEXCL);//since 2.3.0 -> (if JSSC_NO_TIOCEXCL defined, exclusive lock for serial port will be disabled)
+        } else {
+            throw new SerialPortException(this.portName, "openPort()", SerialPortException.TYPE_NULL_NOT_PERMITTED);//since 2.1.0 -> NULL port name fix
         }
-        else {
-            throw new SerialPortException(portName, "openPort()", SerialPortException.TYPE_NULL_NOT_PERMITTED);//since 2.1.0 -> NULL port name fix
+        if (this.portHandle == SerialNativeInterface.ERR_PORT_BUSY) {
+            throw new SerialPortException(this.portName, "openPort()", SerialPortException.TYPE_PORT_BUSY);
+        } else if (this.portHandle == SerialNativeInterface.ERR_PORT_NOT_FOUND) {
+            throw new SerialPortException(this.portName, "openPort()", SerialPortException.TYPE_PORT_NOT_FOUND);
+        } else if (this.portHandle == SerialNativeInterface.ERR_PERMISSION_DENIED) {
+            throw new SerialPortException(this.portName, "openPort()", SerialPortException.TYPE_PERMISSION_DENIED);
+        } else if (this.portHandle == SerialNativeInterface.ERR_INCORRECT_SERIAL_PORT) {
+            throw new SerialPortException(this.portName, "openPort()", SerialPortException.TYPE_INCORRECT_SERIAL_PORT);
         }
-        if(portHandle == SerialNativeInterface.ERR_PORT_BUSY){
-            throw new SerialPortException(portName, "openPort()", SerialPortException.TYPE_PORT_BUSY);
-        }
-        else if(portHandle == SerialNativeInterface.ERR_PORT_NOT_FOUND){
-            throw new SerialPortException(portName, "openPort()", SerialPortException.TYPE_PORT_NOT_FOUND);
-        }
-        else if(portHandle == SerialNativeInterface.ERR_PERMISSION_DENIED){
-            throw new SerialPortException(portName, "openPort()", SerialPortException.TYPE_PERMISSION_DENIED);
-        }
-        else if(portHandle == SerialNativeInterface.ERR_INCORRECT_SERIAL_PORT){
-            throw new SerialPortException(portName, "openPort()", SerialPortException.TYPE_INCORRECT_SERIAL_PORT);
-        }
-        portOpened = true;
+        this.portOpened = true;
         return true;
     }
 
     /**
      * Setting the parameters of port. RTS and DTR lines are enabled by default
-     * 
+     *
      * @param baudRate data transfer rate
      * @param dataBits number of data bits
      * @param stopBits number of stop bits
@@ -188,7 +185,7 @@ public class SerialPort {
      *
      * @throws SerialPortException
      */
-    public boolean setParams(int baudRate, int dataBits, int stopBits, int parity) throws SerialPortException {
+    public boolean setParams(final int baudRate, final int dataBits, final int stopBits, final int parity) throws SerialPortException {
         return setParams(baudRate, dataBits, stopBits, parity, true, true);
     }
 
@@ -208,22 +205,21 @@ public class SerialPort {
      *
      * @since 0.8
      */
-    public boolean setParams(int baudRate, int dataBits, int stopBits, int parity, boolean setRTS, boolean setDTR) throws SerialPortException {
+    public boolean setParams(final int baudRate, final int dataBits, int stopBits, final int parity, final boolean setRTS, final boolean setDTR) throws SerialPortException {
         checkPortOpened("setParams()");
-        if(stopBits == 1){
+        if (stopBits == 1) {
             stopBits = 0;
-        }
-        else if(stopBits == 3){
+        } else if (stopBits == 3) {
             stopBits = 1;
         }
         int flags = 0;
-        if(System.getProperty(SerialNativeInterface.PROPERTY_JSSC_IGNPAR) != null || System.getProperty(SerialNativeInterface.PROPERTY_JSSC_IGNPAR.toLowerCase()) != null){
+        if (System.getProperty(SerialNativeInterface.PROPERTY_JSSC_IGNPAR) != null || System.getProperty(SerialNativeInterface.PROPERTY_JSSC_IGNPAR.toLowerCase()) != null) {
             flags |= PARAMS_FLAG_IGNPAR;
         }
-        if(System.getProperty(SerialNativeInterface.PROPERTY_JSSC_PARMRK) != null || System.getProperty(SerialNativeInterface.PROPERTY_JSSC_PARMRK.toLowerCase()) != null){
+        if (System.getProperty(SerialNativeInterface.PROPERTY_JSSC_PARMRK) != null || System.getProperty(SerialNativeInterface.PROPERTY_JSSC_PARMRK.toLowerCase()) != null) {
             flags |= PARAMS_FLAG_PARMRK;
         }
-        return serialInterface.setParams(portHandle, baudRate, dataBits, stopBits, parity, setRTS, setDTR, flags);
+        return this.serialInterface.setParams(this.portHandle, baudRate, dataBits, stopBits, parity, setRTS, setDTR, flags);
     }
 
     /**
@@ -237,9 +233,9 @@ public class SerialPort {
      *
      * @throws SerialPortException
      */
-    public boolean purgePort(int flags) throws SerialPortException {
+    public boolean purgePort(final int flags) throws SerialPortException {
         checkPortOpened("purgePort()");
-        return serialInterface.purgePort(portHandle, flags);
+        return this.serialInterface.purgePort(this.portHandle, flags);
     }
 
     /**
@@ -255,34 +251,32 @@ public class SerialPort {
      * Sent parameter "mask" is additive value, so addition of flags is allowed.
      * For example if messages about data receipt and CTS and DSR status changing
      * shall be received, it is required to set the mask - <b>"MASK_RXCHAR | MASK_CTS | MASK_DSR"</b>
-     * 
+     *
      * @return If the operation is successfully completed, the method returns true, otherwise false
      *
      * @throws SerialPortException
      */
-    public boolean setEventsMask(int mask) throws SerialPortException {
+    public boolean setEventsMask(final int mask) throws SerialPortException {
         checkPortOpened("setEventsMask()");
-        if(SerialNativeInterface.getOsType() == SerialNativeInterface.OS_LINUX ||
-           SerialNativeInterface.getOsType() == SerialNativeInterface.OS_SOLARIS ||
-           SerialNativeInterface.getOsType() == SerialNativeInterface.OS_MAC_OS_X){//since 0.9.0
-            linuxMask = mask;
-            if(mask > 0){
-                maskAssigned = true;
-            }
-            else {
-                maskAssigned = false;
+        if (SerialNativeInterface.getOsType() == SerialNativeInterface.OS_LINUX ||
+                SerialNativeInterface.getOsType() == SerialNativeInterface.OS_SOLARIS ||
+                SerialNativeInterface.getOsType() == SerialNativeInterface.OS_MAC_OS_X) {//since 0.9.0
+            this.linuxMask = mask;
+            if (mask > 0) {
+                this.maskAssigned = true;
+            } else {
+                this.maskAssigned = false;
             }
             return true;
         }
-        boolean returnValue = serialInterface.setEventsMask(portHandle, mask);
-        if(!returnValue){
-            throw new SerialPortException(portName, "setEventsMask()", SerialPortException.TYPE_CANT_SET_MASK);
+        final boolean returnValue = this.serialInterface.setEventsMask(this.portHandle, mask);
+        if (!returnValue) {
+            throw new SerialPortException(this.portName, "setEventsMask()", SerialPortException.TYPE_CANT_SET_MASK);
         }
-        if(mask > 0){
-            maskAssigned = true;
-        }
-        else {
-            maskAssigned = false;
+        if (mask > 0) {
+            this.maskAssigned = true;
+        } else {
+            this.maskAssigned = false;
         }
         return returnValue;
     }
@@ -299,9 +293,9 @@ public class SerialPort {
         if(SerialNativeInterface.getOsType() == SerialNativeInterface.OS_LINUX ||
            SerialNativeInterface.getOsType() == SerialNativeInterface.OS_SOLARIS ||
            SerialNativeInterface.getOsType() == SerialNativeInterface.OS_MAC_OS_X){//since 0.9.0
-            return linuxMask;
+            return this.linuxMask;
         }
-        return serialInterface.getEventsMask(portHandle);
+        return this.serialInterface.getEventsMask(this.portHandle);
     }
 
     /**
@@ -310,55 +304,50 @@ public class SerialPort {
      * @since 0.8
      */
     private int getLinuxMask() {
-        return linuxMask;
+        return this.linuxMask;
     }
 
     /**
      * Change RTS line state. Set "true" for switching ON and "false" for switching OFF RTS line
      *
      * @return If the operation is successfully completed, the method returns true, otherwise false
-     *
      * @throws SerialPortException
      */
-    public boolean setRTS(boolean enabled) throws SerialPortException {
+    public boolean setRTS(final boolean enabled) throws SerialPortException {
         checkPortOpened("setRTS()");
-        return serialInterface.setRTS(portHandle, enabled);
+        return this.serialInterface.setRTS(this.portHandle, enabled);
     }
 
     /**
      * Change DTR line state. Set "true" for switching ON and "false" for switching OFF DTR line
      *
      * @return If the operation is successfully completed, the method returns true, otherwise false
-     *
      * @throws SerialPortException
      */
-    public boolean setDTR(boolean enabled) throws SerialPortException {
+    public boolean setDTR(final boolean enabled) throws SerialPortException {
         checkPortOpened("setDTR()");
-        return serialInterface.setDTR(portHandle, enabled);
+        return this.serialInterface.setDTR(this.portHandle, enabled);
     }
 
     /**
      * Write byte array to port
      *
      * @return If the operation is successfully completed, the method returns true, otherwise false
-     * 
      * @throws SerialPortException
      */
-    public boolean writeBytes(byte[] buffer) throws SerialPortException {
+    public boolean writeBytes(final byte[] buffer) throws SerialPortException {
         checkPortOpened("writeBytes()");
-        return serialInterface.writeBytes(portHandle, buffer);
+        return this.serialInterface.writeBytes(this.portHandle, buffer);
     }
 
     /**
      * Write single byte to port
      *
      * @return If the operation is successfully completed, the method returns true, otherwise false
-     *
      * @throws SerialPortException
-     *
      * @since 0.8
      */
-    public boolean writeByte(byte singleByte) throws SerialPortException {
+    public boolean writeByte(final byte singleByte) throws SerialPortException {
         checkPortOpened("writeByte()");
         return writeBytes(new byte[]{singleByte});
     }
@@ -372,7 +361,7 @@ public class SerialPort {
      *
      * @since 0.8
      */
-    public boolean writeString(String string) throws SerialPortException {
+    public boolean writeString(final String string) throws SerialPortException {
         checkPortOpened("writeString()");
         return writeBytes(string.getBytes());
     }
@@ -386,7 +375,7 @@ public class SerialPort {
      *
      * @since 2.8.0
      */
-    public boolean writeString(String string, String charsetName) throws SerialPortException, UnsupportedEncodingException {
+    public boolean writeString(final String string, final String charsetName) throws SerialPortException, UnsupportedEncodingException {
         checkPortOpened("writeString()");
         return writeBytes(string.getBytes(charsetName));
     }
@@ -400,9 +389,9 @@ public class SerialPort {
      *
      * @since 0.8
      */
-    public boolean writeInt(int singleInt) throws SerialPortException {
+    public boolean writeInt(final int singleInt) throws SerialPortException {
         checkPortOpened("writeInt()");
-        return writeBytes(new byte[]{(byte)singleInt});
+        return writeBytes(new byte[]{(byte) singleInt});
     }
 
     /**
@@ -414,11 +403,11 @@ public class SerialPort {
      *
      * @since 0.8
      */
-    public boolean writeIntArray(int[] buffer) throws SerialPortException {
+    public boolean writeIntArray(final int[] buffer) throws SerialPortException {
         checkPortOpened("writeIntArray()");
-        byte[] byteArray = new byte[buffer.length];
-        for(int i = 0; i < buffer.length; i++){
-            byteArray[i] = (byte)buffer[i];
+        final byte[] byteArray = new byte[buffer.length];
+        for (int i = 0; i < buffer.length; i++) {
+            byteArray[i] = (byte) buffer[i];
         }
         return writeBytes(byteArray);
     }
@@ -427,14 +416,14 @@ public class SerialPort {
      * Read byte array from port
      *
      * @param byteCount count of bytes for reading
-     * 
+     *
      * @return byte array with "byteCount" length
      *
      * @throws SerialPortException
      */
-    public byte[] readBytes(int byteCount) throws SerialPortException {
+    public byte[] readBytes(final int byteCount) throws SerialPortException {
         checkPortOpened("readBytes()");
-        return serialInterface.readBytes(portHandle, byteCount);
+        return this.serialInterface.readBytes(this.portHandle, byteCount);
     }
 
     /**
@@ -448,7 +437,7 @@ public class SerialPort {
      *
      * @since 0.8
      */
-    public String readString(int byteCount) throws SerialPortException {
+    public String readString(final int byteCount) throws SerialPortException {
         checkPortOpened("readString()");
         return new String(readBytes(byteCount));
     }
@@ -464,7 +453,7 @@ public class SerialPort {
      *
      * @since 0.8
      */
-    public String readHexString(int byteCount) throws SerialPortException {
+    public String readHexString(final int byteCount) throws SerialPortException {
         checkPortOpened("readHexString()");
         return readHexString(byteCount, " ");
     }
@@ -480,13 +469,13 @@ public class SerialPort {
      *
      * @since 0.8
      */
-    public String readHexString(int byteCount, String separator) throws SerialPortException {
+    public String readHexString(final int byteCount, final String separator) throws SerialPortException {
         checkPortOpened("readHexString()");
-        String[] strBuffer = readHexStringArray(byteCount);
+        final String[] strBuffer = readHexStringArray(byteCount);
         String returnString = "";
         boolean insertSeparator = false;
-        for(String value : strBuffer){
-            if(insertSeparator){
+        for (final String value : strBuffer) {
+            if (insertSeparator) {
                 returnString += separator;
             }
             returnString += value;
@@ -499,20 +488,20 @@ public class SerialPort {
      * Read Hex String array from port
      *
      * @param byteCount count of bytes for reading
-     * 
+     *
      * @return String array with "byteCount" length and Hexadecimal String values
      *
      * @throws SerialPortException
      *
      * @since 0.8
      */
-    public String[] readHexStringArray(int byteCount) throws SerialPortException {
+    public String[] readHexStringArray(final int byteCount) throws SerialPortException {
         checkPortOpened("readHexStringArray()");
-        int[] intBuffer = readIntArray(byteCount);
-        String[] strBuffer = new String[intBuffer.length];
-        for(int i = 0; i < intBuffer.length; i++){
+        final int[] intBuffer = readIntArray(byteCount);
+        final String[] strBuffer = new String[intBuffer.length];
+        for (int i = 0; i < intBuffer.length; i++) {
             String value = Integer.toHexString(intBuffer[i]).toUpperCase();
-            if(value.length() == 1) {
+            if (value.length() == 1) {
                 value = "0" + value;
             }
             strBuffer[i] = value;
@@ -531,39 +520,37 @@ public class SerialPort {
      *
      * @since 0.8
      */
-    public int[] readIntArray(int byteCount) throws SerialPortException {
+    public int[] readIntArray(final int byteCount) throws SerialPortException {
         checkPortOpened("readIntArray()");
-        byte[] buffer = readBytes(byteCount);
-        int[] intBuffer = new int[buffer.length];
-        for(int i = 0; i < buffer.length; i++){
-            if(buffer[i] < 0){
+        final byte[] buffer = readBytes(byteCount);
+        final int[] intBuffer = new int[buffer.length];
+        for (int i = 0; i < buffer.length; i++) {
+            if (buffer[i] < 0) {
                 intBuffer[i] = 256 + buffer[i];
-            }
-            else {
+            } else {
                 intBuffer[i] = buffer[i];
             }
         }
         return intBuffer;
     }
 
-    private void waitBytesWithTimeout(String methodName, int byteCount, int timeout) throws SerialPortException, SerialPortTimeoutException {
+    private void waitBytesWithTimeout(final String methodName, final int byteCount, final int timeout) throws SerialPortException, SerialPortTimeoutException {
         checkPortOpened("waitBytesWithTimeout()");
         boolean timeIsOut = true;
-        long startTime = System.currentTimeMillis();
-        while((System.currentTimeMillis() - startTime) < timeout){
-            if(getInputBufferBytesCount() >= byteCount){
+        final long startTime = System.currentTimeMillis();
+        while ((System.currentTimeMillis() - startTime) < timeout) {
+            if (getInputBufferBytesCount() >= byteCount) {
                 timeIsOut = false;
                 break;
             }
             try {
                 Thread.sleep(0, 100);//Need to sleep some time to prevent high CPU loading
-            }
-            catch (InterruptedException ex) {
+            } catch (final InterruptedException ex) {
                 //Do nothing
             }
         }
-        if(timeIsOut){
-            throw new SerialPortTimeoutException(portName, methodName, timeout);
+        if (timeIsOut) {
+            throw new SerialPortTimeoutException(this.portName, methodName, timeout);
         }
     }
 
@@ -580,7 +567,7 @@ public class SerialPort {
      *
      * @since 2.0
      */
-    public byte[] readBytes(int byteCount, int timeout) throws SerialPortException, SerialPortTimeoutException {
+    public byte[] readBytes(final int byteCount, final int timeout) throws SerialPortException, SerialPortTimeoutException {
         checkPortOpened("readBytes()");
         waitBytesWithTimeout("readBytes()", byteCount, timeout);
         return readBytes(byteCount);
@@ -599,7 +586,7 @@ public class SerialPort {
      *
      * @since 2.0
      */
-    public String readString(int byteCount, int timeout) throws SerialPortException, SerialPortTimeoutException {
+    public String readString(final int byteCount, final int timeout) throws SerialPortException, SerialPortTimeoutException {
         checkPortOpened("readString()");
         waitBytesWithTimeout("readString()", byteCount, timeout);
         return readString(byteCount);
@@ -618,7 +605,7 @@ public class SerialPort {
      *
      * @since 2.0
      */
-    public String readHexString(int byteCount, int timeout) throws SerialPortException, SerialPortTimeoutException {
+    public String readHexString(final int byteCount, final int timeout) throws SerialPortException, SerialPortTimeoutException {
         checkPortOpened("readHexString()");
         waitBytesWithTimeout("readHexString()", byteCount, timeout);
         return readHexString(byteCount);
@@ -637,7 +624,7 @@ public class SerialPort {
      *
      * @since 2.0
      */
-    public String readHexString(int byteCount, String separator, int timeout) throws SerialPortException, SerialPortTimeoutException {
+    public String readHexString(final int byteCount, final String separator, final int timeout) throws SerialPortException, SerialPortTimeoutException {
         checkPortOpened("readHexString()");
         waitBytesWithTimeout("readHexString()", byteCount, timeout);
         return readHexString(byteCount, separator);
@@ -656,7 +643,7 @@ public class SerialPort {
      *
      * @since 2.0
      */
-    public String[] readHexStringArray(int byteCount, int timeout) throws SerialPortException, SerialPortTimeoutException {
+    public String[] readHexStringArray(final int byteCount, final int timeout) throws SerialPortException, SerialPortTimeoutException {
         checkPortOpened("readHexStringArray()");
         waitBytesWithTimeout("readHexStringArray()", byteCount, timeout);
         return readHexStringArray(byteCount);
@@ -675,7 +662,7 @@ public class SerialPort {
      *
      * @since 2.0
      */
-    public int[] readIntArray(int byteCount, int timeout) throws SerialPortException, SerialPortTimeoutException {
+    public int[] readIntArray(final int byteCount, final int timeout) throws SerialPortException, SerialPortTimeoutException {
         checkPortOpened("readIntArray()");
         waitBytesWithTimeout("readIntArray()", byteCount, timeout);
         return readIntArray(byteCount);
@@ -692,8 +679,8 @@ public class SerialPort {
      */
     public byte[] readBytes() throws SerialPortException {
         checkPortOpened("readBytes()");
-        int byteCount = getInputBufferBytesCount();
-        if(byteCount <= 0){
+        final int byteCount = getInputBufferBytesCount();
+        if (byteCount <= 0){
             return null;
         }
         return readBytes(byteCount);
@@ -710,8 +697,8 @@ public class SerialPort {
      */
     public String readString() throws SerialPortException {
         checkPortOpened("readString()");
-        int byteCount = getInputBufferBytesCount();
-        if(byteCount <= 0){
+        final int byteCount = getInputBufferBytesCount();
+        if (byteCount <= 0){
             return null;
         }
         return readString(byteCount);
@@ -728,8 +715,8 @@ public class SerialPort {
      */
     public String readHexString() throws SerialPortException {
         checkPortOpened("readHexString()");
-        int byteCount = getInputBufferBytesCount();
-        if(byteCount <= 0){
+        final int byteCount = getInputBufferBytesCount();
+        if (byteCount <= 0){
             return null;
         }
         return readHexString(byteCount);
@@ -744,10 +731,10 @@ public class SerialPort {
      *
      * @since 0.8
      */
-    public String readHexString(String separator) throws SerialPortException {
+    public String readHexString(final String separator) throws SerialPortException {
         checkPortOpened("readHexString()");
-        int byteCount = getInputBufferBytesCount();
-        if(byteCount <= 0){
+        final int byteCount = getInputBufferBytesCount();
+        if (byteCount <= 0) {
             return null;
         }
         return readHexString(byteCount, separator);
@@ -764,8 +751,8 @@ public class SerialPort {
      */
     public String[] readHexStringArray() throws SerialPortException {
         checkPortOpened("readHexStringArray()");
-        int byteCount = getInputBufferBytesCount();
-        if(byteCount <= 0){
+        final int byteCount = getInputBufferBytesCount();
+        if (byteCount <= 0){
             return null;
         }
         return readHexStringArray(byteCount);
@@ -782,8 +769,8 @@ public class SerialPort {
      */
     public int[] readIntArray() throws SerialPortException {
         checkPortOpened("readIntArray()");
-        int byteCount = getInputBufferBytesCount();
-        if(byteCount <= 0){
+        final int byteCount = getInputBufferBytesCount();
+        if (byteCount <= 0){
             return null;
         }
         return readIntArray(byteCount);
@@ -800,7 +787,7 @@ public class SerialPort {
      */
     public int getInputBufferBytesCount() throws SerialPortException {
         checkPortOpened("getInputBufferBytesCount()");
-        return serialInterface.getBuffersBytesCount(portHandle)[0];
+        return this.serialInterface.getBuffersBytesCount(this.portHandle)[0];
     }
 
     /**
@@ -814,7 +801,7 @@ public class SerialPort {
      */
     public int getOutputBufferBytesCount() throws SerialPortException {
         checkPortOpened("getOutputBufferBytesCount()");
-        return serialInterface.getBuffersBytesCount(portHandle)[1];
+        return this.serialInterface.getBuffersBytesCount(this.portHandle)[1];
     }
 
     /**
@@ -827,9 +814,9 @@ public class SerialPort {
      *
      * @since 0.8
      */
-    public boolean setFlowControlMode(int mask) throws SerialPortException {
+    public boolean setFlowControlMode(final int mask) throws SerialPortException {
         checkPortOpened("setFlowControlMode()");
-        return serialInterface.setFlowControlMode(portHandle, mask);
+        return this.serialInterface.setFlowControlMode(this.portHandle, mask);
     }
 
     /**
@@ -843,7 +830,7 @@ public class SerialPort {
      */
     public int getFlowControlMode() throws SerialPortException {
         checkPortOpened("getFlowControlMode()");
-        return serialInterface.getFlowControlMode(portHandle);
+        return this.serialInterface.getFlowControlMode(this.portHandle);
     }
 
     /**
@@ -852,18 +839,18 @@ public class SerialPort {
      * @param duration duration of Break signal
      *
      * @return If the operation is successfully completed, the method returns true, otherwise false
-     * 
+     *
      * @throws SerialPortException
      *
      * @since 0.8
      */
-    public boolean sendBreak(int duration)throws SerialPortException {
+    public boolean sendBreak(final int duration) throws SerialPortException {
         checkPortOpened("sendBreak()");
-        return serialInterface.sendBreak(portHandle, duration);
+        return this.serialInterface.sendBreak(this.portHandle, duration);
     }
 
     private int[][] waitEvents() {
-        return serialInterface.waitEvents(portHandle);
+        return this.serialInterface.waitEvents(this.portHandle);
     }
 
     /**
@@ -873,9 +860,9 @@ public class SerialPort {
      *
      * @throws SerialPortException
      */
-    private void checkPortOpened(String methodName) throws SerialPortException {
-        if(!portOpened){
-            throw new SerialPortException(portName, methodName, SerialPortException.TYPE_PORT_NOT_OPENED);
+    private void checkPortOpened(final String methodName) throws SerialPortException {
+        if (!this.portOpened) {
+            throw new SerialPortException(this.portName, methodName, SerialPortException.TYPE_PORT_NOT_OPENED);
         }
     }
 
@@ -892,7 +879,7 @@ public class SerialPort {
      */
     public int[] getLinesStatus() throws SerialPortException {
         checkPortOpened("getLinesStatus()");
-        return serialInterface.getLinesStatus(portHandle);
+        return this.serialInterface.getLinesStatus(this.portHandle);
     }
 
     /**
@@ -904,10 +891,9 @@ public class SerialPort {
      */
     public boolean isCTS() throws SerialPortException {
         checkPortOpened("isCTS()");
-        if(serialInterface.getLinesStatus(portHandle)[0] == 1){
+        if(this.serialInterface.getLinesStatus(this.portHandle)[0] == 1) {
             return true;
-        }
-        else {
+        } else {
             return false;
         }
     }
@@ -921,10 +907,9 @@ public class SerialPort {
      */
     public boolean isDSR() throws SerialPortException {
         checkPortOpened("isDSR()");
-        if(serialInterface.getLinesStatus(portHandle)[1] == 1){
+        if(this.serialInterface.getLinesStatus(this.portHandle)[1] == 1) {
             return true;
-        }
-        else {
+        } else {
             return false;
         }
     }
@@ -938,10 +923,9 @@ public class SerialPort {
      */
     public boolean isRING() throws SerialPortException {
         checkPortOpened("isRING()");
-        if(serialInterface.getLinesStatus(portHandle)[2] == 1){
+        if(this.serialInterface.getLinesStatus(this.portHandle)[2] == 1) {
             return true;
-        }
-        else {
+        } else {
             return false;
         }
     }
@@ -955,10 +939,9 @@ public class SerialPort {
      */
     public boolean isRLSD() throws SerialPortException {
         checkPortOpened("isRLSD()");
-        if(serialInterface.getLinesStatus(portHandle)[3] == 1){
+        if(this.serialInterface.getLinesStatus(this.portHandle)[3] == 1) {
             return true;
-        }
-        else {
+        } else {
             return false;
         }
     }
@@ -971,7 +954,7 @@ public class SerialPort {
      *
      * @throws SerialPortException
      */
-    public void addEventListener(SerialPortEventListener listener) throws SerialPortException {
+    public void addEventListener(final SerialPortEventListener listener) throws SerialPortException {
         addEventListener(listener, MASK_RXCHAR, false);
     }
 
@@ -985,7 +968,7 @@ public class SerialPort {
      *
      * @throws SerialPortException
      */
-    public void addEventListener(SerialPortEventListener listener, int mask) throws SerialPortException {
+    public void addEventListener(final SerialPortEventListener listener, final int mask) throws SerialPortException {
         addEventListener(listener, mask, true);
     }
 
@@ -1003,33 +986,30 @@ public class SerialPort {
      *
      * @throws SerialPortException
      */
-    private void addEventListener(SerialPortEventListener listener, int mask, boolean overwriteMask) throws SerialPortException {
+    private void addEventListener(final SerialPortEventListener listener, final int mask, final boolean overwriteMask) throws SerialPortException {
         checkPortOpened("addEventListener()");
-        if(!eventListenerAdded){
-            if((maskAssigned && overwriteMask) || !maskAssigned) {
+        if (!this.eventListenerAdded) {
+            if ((this.maskAssigned && overwriteMask) || !this.maskAssigned) {
                 setEventsMask(mask);
             }
-            eventListener = listener;
-            eventThread = getNewEventThread();
-            eventThread.setName("EventThread " + portName);
+            this.eventListener = listener;
+            this.eventThread = getNewEventThread();
+            this.eventThread.setName("EventThread " + this.portName);
             //since 2.2.0 ->
             try {
-                Method method = eventListener.getClass().getMethod("errorOccurred", new Class<?>[]{SerialPortException.class});
+                final Method method = this.eventListener.getClass().getMethod("errorOccurred", new Class<?>[]{SerialPortException.class});
                 method.setAccessible(true);
-                methodErrorOccurred = method;
-            }
-            catch (SecurityException ex) {
+                this.methodErrorOccurred = method;
+            } catch (final SecurityException ex) {
                 //Do nothing
-            }
-            catch (NoSuchMethodException ex) {
+            } catch (final NoSuchMethodException ex) {
                 //Do nothing
             }
             //<- since 2.2.0
-            eventThread.start();
-            eventListenerAdded = true;
-        }
-        else {
-            throw new SerialPortException(portName, "addEventListener()", SerialPortException.TYPE_LISTENER_ALREADY_ADDED);
+            this.eventThread.start();
+            this.eventListenerAdded = true;
+        } else {
+            throw new SerialPortException(this.portName, "addEventListener()", SerialPortException.TYPE_LISTENER_ALREADY_ADDED);
         }
     }
 
@@ -1057,23 +1037,22 @@ public class SerialPort {
      */
     public boolean removeEventListener() throws SerialPortException {
         checkPortOpened("removeEventListener()");
-        if(!eventListenerAdded){
-            throw new SerialPortException(portName, "removeEventListener()", SerialPortException.TYPE_CANT_REMOVE_LISTENER);
+        if (!this.eventListenerAdded) {
+            throw new SerialPortException(this.portName, "removeEventListener()", SerialPortException.TYPE_CANT_REMOVE_LISTENER);
         }
-        eventThread.terminateThread();
+        this.eventThread.terminateThread();
         setEventsMask(0);
-        if(Thread.currentThread().getId() != eventThread.getId()){
-            if(eventThread.isAlive()){
+        if (Thread.currentThread().getId() != this.eventThread.getId()) {
+            if (this.eventThread.isAlive()) {
                 try {
-                    eventThread.join(5000);
-                }
-                catch (InterruptedException ex) {
-                    throw new SerialPortException(portName, "removeEventListener()", SerialPortException.TYPE_LISTENER_THREAD_INTERRUPTED);
+                    this.eventThread.join(5000);
+                } catch (final InterruptedException ex) {
+                    throw new SerialPortException(this.portName, "removeEventListener()", SerialPortException.TYPE_LISTENER_THREAD_INTERRUPTED);
                 }
             }
         }
-        methodErrorOccurred = null;
-        eventListenerAdded = false;
+        this.methodErrorOccurred = null;
+        this.eventListenerAdded = false;
         return true;
     }
 
@@ -1086,13 +1065,13 @@ public class SerialPort {
      */
     public boolean closePort() throws SerialPortException {
         checkPortOpened("closePort()");
-        if(eventListenerAdded){
+        if(this.eventListenerAdded) {
             removeEventListener();
         }
-        boolean returnValue = serialInterface.closePort(portHandle);
-        if(returnValue){
-            maskAssigned = false;
-            portOpened = false;
+        final boolean returnValue = this.serialInterface.closePort(this.portHandle);
+        if (returnValue){
+            this.maskAssigned = false;
+            this.portOpened = false;
         }
         return returnValue;
     }
@@ -1105,11 +1084,11 @@ public class SerialPort {
         
         @Override
         public void run() {
-            while(!threadTerminated){
-                int[][] eventArray = waitEvents();
-                for(int i = 0; i < eventArray.length; i++){
-                    if(eventArray[i][0] > 0 && !threadTerminated){
-                        eventListener.serialEvent(new SerialPortEvent(portName, eventArray[i][0], eventArray[i][1]));
+            while (!this.threadTerminated) {
+                final int[][] eventArray = waitEvents();
+                for (int i = 0; i < eventArray.length; i++) {
+                    if (eventArray[i][0] > 0 && !this.threadTerminated) {
+                        SerialPort.this.eventListener.serialEvent(new SerialPortEvent(SerialPort.this.portName, eventArray[i][0], eventArray[i][1]));
                         //FIXME
                         /*if(methodErrorOccurred != null){
                             try {
@@ -1125,7 +1104,7 @@ public class SerialPort {
         }
 
         private void terminateThread(){
-            threadTerminated = true;
+            this.threadTerminated = true;
         }
     }
 
@@ -1137,11 +1116,11 @@ public class SerialPort {
     private class LinuxEventThread extends EventThread {
 
         //Essential interruptions for events: BREAK, ERR, TXEMPTY
-        private final int INTERRUPT_BREAK = 512;
-        private final int INTERRUPT_TX = 1024;
-        private final int INTERRUPT_FRAME = 2048;
-        private final int INTERRUPT_OVERRUN = 4096;
-        private final int INTERRUPT_PARITY = 8192;
+        private static final int INTERRUPT_BREAK = 512;
+        private static final int INTERRUPT_TX = 1024;
+        private static final int INTERRUPT_FRAME = 2048;
+        private static final int INTERRUPT_OVERRUN = 4096;
+        private static final int INTERRUPT_PARITY = 8192;
 
         //Count of interruptions
         private int interruptBreak;
@@ -1158,37 +1137,37 @@ public class SerialPort {
 
         //Need to get initial states
         public LinuxEventThread(){
-            int[][] eventArray = waitEvents();
+            final int[][] eventArray = waitEvents();
             for(int i = 0; i < eventArray.length; i++){
-                int eventType = eventArray[i][0];
-                int eventValue = eventArray[i][1];
-                switch(eventType){
+                final int eventType = eventArray[i][0];
+                final int eventValue = eventArray[i][1];
+                switch (eventType) {
                     case INTERRUPT_BREAK:
-                        interruptBreak = eventValue;
+                        this.interruptBreak = eventValue;
                         break;
                     case INTERRUPT_TX:
-                        interruptTX = eventValue;
+                        this.interruptTX = eventValue;
                         break;
                     case INTERRUPT_FRAME:
-                        interruptFrame = eventValue;
+                        this.interruptFrame = eventValue;
                         break;
                     case INTERRUPT_OVERRUN:
-                        interruptOverrun = eventValue;
+                        this.interruptOverrun = eventValue;
                         break;
                     case INTERRUPT_PARITY:
-                        interruptParity = eventValue;
+                        this.interruptParity = eventValue;
                         break;
                     case MASK_CTS:
-                        preCTS = eventValue;
+                        this.preCTS = eventValue;
                         break;
                     case MASK_DSR:
-                        preDSR = eventValue;
+                        this.preDSR = eventValue;
                         break;
                     case MASK_RING:
-                        preRING = eventValue;
+                        this.preRING = eventValue;
                         break;
                     case MASK_RLSD:
-                        preRLSD = eventValue;
+                        this.preRLSD = eventValue;
                         break;
                 }
             }
@@ -1197,20 +1176,20 @@ public class SerialPort {
         @Override
         public void run() {
             while(!super.threadTerminated){
-                int[][] eventArray = waitEvents();
-                int mask = getLinuxMask();
+                final int[][] eventArray = waitEvents();
+                final int mask = getLinuxMask();
                 boolean interruptTxChanged = false;
                 int errorMask = 0;
-                for(int i = 0; i < eventArray.length; i++){
+                for (int i = 0; i < eventArray.length; i++) {
                     boolean sendEvent = false;
                     int eventType = eventArray[i][0];
                     int eventValue = eventArray[i][1];
-                    if(eventType > 0 && !super.threadTerminated){
-                        switch(eventType){
+                    if (eventType > 0 && !super.threadTerminated) {
+                        switch (eventType) {
                             case INTERRUPT_BREAK:
-                                if(eventValue != interruptBreak){
-                                    interruptBreak = eventValue;
-                                    if((mask & MASK_BREAK) == MASK_BREAK){
+                                if (eventValue != this.interruptBreak) {
+                                    this.interruptBreak = eventValue;
+                                    if ((mask & MASK_BREAK) == MASK_BREAK) {
                                         eventType = MASK_BREAK;
                                         eventValue = 0;
                                         sendEvent = true;
@@ -1218,68 +1197,68 @@ public class SerialPort {
                                 }
                                 break;
                             case INTERRUPT_TX:
-                                if(eventValue != interruptTX){
-                                    interruptTX = eventValue;
+                                if (eventValue != this.interruptTX) {
+                                    this.interruptTX = eventValue;
                                     interruptTxChanged = true;
                                 }
                                 break;
                             case INTERRUPT_FRAME:
-                                if(eventValue != interruptFrame){
-                                    interruptFrame = eventValue;
+                                if (eventValue != this.interruptFrame) {
+                                    this.interruptFrame = eventValue;
                                     errorMask |= ERROR_FRAME;
                                 }
                                 break;
                             case INTERRUPT_OVERRUN:
-                                if(eventValue != interruptOverrun){
-                                    interruptOverrun = eventValue;
+                                if (eventValue != this.interruptOverrun) {
+                                    this.interruptOverrun = eventValue;
                                     errorMask |= ERROR_OVERRUN;
                                 }
                                 break;
                             case INTERRUPT_PARITY:
-                                if(eventValue != interruptParity){
-                                    interruptParity = eventValue;
+                                if (eventValue != this.interruptParity) {
+                                    this.interruptParity = eventValue;
                                     errorMask |= ERROR_PARITY;
                                 }
-                                if((mask & MASK_ERR) == MASK_ERR && errorMask != 0){
+                                if ((mask & MASK_ERR) == MASK_ERR && errorMask != 0) {
                                     eventType = MASK_ERR;
                                     eventValue = errorMask;
                                     sendEvent = true;
                                 }
                                 break;
                             case MASK_CTS:
-                                if(eventValue != preCTS){
-                                    preCTS = eventValue;
-                                    if((mask & MASK_CTS) == MASK_CTS){
+                                if (eventValue != this.preCTS) {
+                                    this.preCTS = eventValue;
+                                    if ((mask & MASK_CTS) == MASK_CTS) {
                                         sendEvent = true;
                                     }
                                 }
                                 break;
                             case MASK_DSR:
-                                if(eventValue != preDSR){
-                                    preDSR = eventValue;
-                                    if((mask & MASK_DSR) == MASK_DSR){
+                                if (eventValue != this.preDSR) {
+                                    this.preDSR = eventValue;
+                                    if ((mask & MASK_DSR) == MASK_DSR) {
                                         sendEvent = true;
                                     }
                                 }
                                 break;
                             case MASK_RING:
-                                if(eventValue != preRING){
-                                    preRING = eventValue;
-                                    if((mask & MASK_RING) == MASK_RING){
+                                if (eventValue != this.preRING) {
+                                    this.preRING = eventValue;
+                                    if ((mask & MASK_RING) == MASK_RING) {
                                         sendEvent = true;
                                     }
                                 }
                                 break;
                             case MASK_RLSD: /*DCD*/
-                                if(eventValue != preRLSD){
-                                    preRLSD = eventValue;
-                                    if((mask & MASK_RLSD) == MASK_RLSD){
+                                if (eventValue != this.preRLSD) {
+                                    this.preRLSD = eventValue;
+                                    if ((mask & MASK_RLSD) == MASK_RLSD) {
                                         sendEvent = true;
                                     }
                                 }
                                 break;
                             case MASK_RXCHAR:
-                                if(((mask & MASK_RXCHAR) == MASK_RXCHAR) && (eventValue > 0)){
+                                if (((mask & MASK_RXCHAR) == MASK_RXCHAR) && (eventValue > 0)) {
                                     sendEvent = true;
                                 }
                                 break;
@@ -1296,7 +1275,7 @@ public class SerialPort {
                                 break;
                         }
                         if(sendEvent){
-                            eventListener.serialEvent(new SerialPortEvent(portName, eventType, eventValue));
+                            SerialPort.this.eventListener.serialEvent(new SerialPortEvent(SerialPort.this.portName, eventType, eventValue));
                         }
                     }
                 }
@@ -1304,7 +1283,7 @@ public class SerialPort {
                 try {
                     Thread.sleep(0, 100);
                 }
-                catch (Exception ex) {
+                catch (final Exception ex) {
                     //Do nothing
                 }
             }

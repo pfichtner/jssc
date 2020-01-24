@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="http://maven.apache.org/POM/4.0.0"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>io.github.java-native.jssc</groupId>
+    <artifactId>jssc-parent</artifactId>
+    <version>5.0.0-SNAPSHOT</version>
+
+    <packaging>pom</packaging>
+    <name>jssc parent</name>
+
+    <organization>
+        <name>Java Native</name>
+        <url>https://github.com/java-native/</url>
+    </organization>
+
+    <licenses>
+        <license>
+            <name>GNU LGPL 3</name>
+            <url>http://www.gnu.org/licenses/lgpl.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <properties>
+        <!-- requires jdk11 to compile java8 bytecode -->
+        <jdk.version>11</jdk.version>
+        <java.version>6</java.version>
+        <maven.compiler.release>${java.version}</maven.compiler.release>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <!-- configuration of plugins -->
+        <!-- set this to true for non-java projects -->
+        <plugin.animalsniffer.skip>false</plugin.animalsniffer.skip>
+        <plugin.maven.surefire.argline>
+            --illegal-access=permit
+        </plugin.maven.surefire.argline>
+
+        <!-- official maven plugins, `plugin.maven.x.version` -->
+        <plugin.maven.assembly.version>3.1.1</plugin.maven.assembly.version>
+        <plugin.maven.compiler.version>3.8.1</plugin.maven.compiler.version>
+        <plugin.maven.enforcer.version>3.0.0-M3</plugin.maven.enforcer.version>
+        <plugin.maven.jar.version>3.2.0</plugin.maven.jar.version>
+        <plugin.maven.javadoc.version>3.1.1</plugin.maven.javadoc.version>
+        <plugin.maven.source.version>3.2.1</plugin.maven.source.version>
+        <plugin.maven.surfire.version>3.0.0-M4</plugin.maven.surfire.version>
+
+        <!-- 3rd-party plugins -->
+        <plugin.animalsniffer.version>1.17</plugin.animalsniffer.version>
+    </properties>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>${plugin.maven.compiler.version}</version>
+                    <configuration>
+                        <compilerArgument>-Xlint:all</compilerArgument>
+                        <showWarnings>true</showWarnings>
+                        <showDeprecation>true</showDeprecation>
+                    </configuration>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>${plugin.maven.javadoc.version}</version>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>${plugin.maven.source.version}</version>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>${plugin.maven.surfire.version}</version>
+                    <configuration>
+                        <argLine>${plugin.maven.surefire.argline}</argLine>
+                    </configuration>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <version>${plugin.maven.jar.version}</version>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-enforcer-plugin</artifactId>
+                    <version>${plugin.maven.enforcer.version}</version>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <version>${plugin.maven.assembly.version}</version>
+                </plugin>
+
+                <!-- 3rd-party -->
+
+                <!-- will check for the java 6 APIs -->
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>animal-sniffer-maven-plugin</artifactId>
+                    <version>${plugin.animalsniffer.version}</version>
+                </plugin>
+
+            </plugins>
+        </pluginManagement>
+
+        <!-- forced invocation -->
+        <plugins>
+            <!-- check for java 6 compatiblity in verify phase -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>animal-sniffer-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>ensure-java-1.6-class-library</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <configuration>
+                            <skip>${plugin.animalsniffer.skip}</skip>
+                            <signature>
+                                <groupId>org.codehaus.mojo.signature</groupId>
+                                <artifactId>java17</artifactId>
+                                <version>1.0</version>
+                            </signature>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- enforce maven and jdk versions -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>enforce-build-environment</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <requireMavenVersion>
+                                    <version>3.5.2</version>
+                                </requireMavenVersion>
+                                <requireJavaVersion>
+                                    <version>${jdk.version}</version>
+                                </requireJavaVersion>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+    <!-- vim: set ai cindent sw=4 expandtab -->
