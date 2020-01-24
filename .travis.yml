@@ -16,6 +16,8 @@ before_cache:
 matrix:
   include:
     - os: linux
+      dist: bionic
+      arch: amd64
       env:
         - TRAVIS_JDK=adopt@1.11.0-1
       addons:
@@ -24,6 +26,8 @@ matrix:
             - cmake3
             - g++
     - os: linux
+      dist: bionic
+      arch: amd64
       env:
         - TRAVIS_JDK=adopt-openj9@1.11.0-5
       addons:
@@ -32,6 +36,8 @@ matrix:
             - cmake3
             - g++
     - os: linux
+      dist: bionic
+      arch: amd64
       env:
         - TRAVIS_JDK=openjdk@1.14.0-32
       addons:
