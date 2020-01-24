@@ -23,7 +23,7 @@ matrix:
       addons:
         apt:
           packages:
-            - cmake3
+            - cmake
             - g++
     - os: linux
       dist: bionic
@@ -33,7 +33,7 @@ matrix:
       addons:
         apt:
           packages:
-            - cmake3
+            - cmake
             - g++
     - os: linux
       dist: bionic
@@ -43,7 +43,7 @@ matrix:
       addons:
         apt:
           packages:
-            - cmake3
+            - cmake
             - g++
 
 before_install:
