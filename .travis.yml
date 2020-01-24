@@ -7,7 +7,6 @@ env:
 cache:
   directories:
     - $HOME/.m2
-    - $HOME/.jabba/jdk
 
 before_cache:
   - rm -rf $HOME/.m2/repository/com/github/java-native
@@ -51,7 +50,7 @@ before_install:
 
 install:
   - $JABBA_HOME/bin/jabba install $TRAVIS_JDK
-  - ./mvnw dependency:resolve
+  # this is blocked by MDEP-204. - ./mvnw dependency:go-offline
 
 script: ./mvnw --batch-mode clean verify
 
