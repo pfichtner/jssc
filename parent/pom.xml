@@ -44,6 +44,7 @@
         <plugin.maven.compiler.version>3.8.1</plugin.maven.compiler.version>
         <plugin.maven.dependency.version>3.1.1</plugin.maven.dependency.version>
         <plugin.maven.enforcer.version>3.0.0-M3</plugin.maven.enforcer.version>
+        <plugin.maven.gpg.version>1.6</plugin.maven.gpg.version>
         <plugin.maven.jar.version>3.2.0</plugin.maven.jar.version>
         <plugin.maven.javadoc.version>3.1.1</plugin.maven.javadoc.version>
         <plugin.maven.source.version>3.2.1</plugin.maven.source.version>
@@ -51,6 +52,7 @@
 
         <!-- 3rd-party plugins -->
         <plugin.animalsniffer.version>1.17</plugin.animalsniffer.version>
+        <plugin.nexus-staging.version>1.6.8</plugin.nexus-staging.version>
     </properties>
 
     <build>
@@ -118,6 +120,12 @@
                     <version>${plugin.maven.assembly.version}</version>
                 </plugin>
 
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-gpg-plugin</artifactId>
+                    <version>${plugin.maven.gpg.version}</version>
+                </plugin>
+
                 <!-- 3rd-party -->
 
                 <!-- will check for the java 6 APIs -->
@@ -125,6 +133,12 @@
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>animal-sniffer-maven-plugin</artifactId>
                     <version>${plugin.animalsniffer.version}</version>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.sonatype.plugins</groupId>
+                    <artifactId>nexus-staging-maven-plugin</artifactId>
+                    <version>${plugin.nexus-staging.version}</version>
                 </plugin>
 
             </plugins>
@@ -217,6 +231,31 @@
                 </plugins>
             </build>
         </profile>
+
+        <profile>
+            <id>deploy</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                    </plugin>
+                    <plugin>
+                        <artifactId>maven-source-plugin</artifactId>
+                    </plugin>
+                    <plugin>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.sonatype.plugins</groupId>
+                        <artifactId>nexus-staging-maven-plugin</artifactId>
+                    </plugin>
+                    <plugin>
+                        <!-- has no impact unless "mvn site" used (typically only for packaging=maven-plugin artifacts) -->
+                        <artifactId>maven-site-plugin</artifactId>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
     </profiles>
 </project>
-    <!-- vim: set ai cindent sw=4 expandtab -->
+        <!-- vim: set ai cindent sw=4 expandtab -->
