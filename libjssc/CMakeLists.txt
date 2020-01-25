@@ -89,7 +89,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/natives/${NATIVE_
 
 # version.h using #cmakedefine for version from pom.xml.
 set(JSSC_VERSION "0.0.0-UNKNOWN")
-file(STRINGS ${CMAKE_CURRENT_SOURCE_DIR}/pom.xml POM_FILE)
+file(STRINGS ${CMAKE_CURRENT_SOURCE_DIR}/../pom.xml POM_FILE)
 foreach(POM_LINE ${POM_FILE})
 	# Assume first "<version>" is the project version
 	if(POM_LINE MATCHES "<version>")
@@ -104,9 +104,9 @@ foreach(POM_LINE ${POM_FILE})
 		break()
 	endif()
 endforeach()
-configure_file(src/cpp/version.h.in ${CMAKE_CURRENT_BINARY_DIR}/version.h @ONLY)
+configure_file(./version.h.in ${CMAKE_CURRENT_BINARY_DIR}/version.h @ONLY)
 
-add_library(jssc SHARED src/cpp/${JSSC_PLATFORM}/jssc.cpp)
+add_library(jssc SHARED ./${JSSC_PLATFORM}/jssc.cpp)
 
 target_include_directories(jssc PRIVATE ${JNI_INCLUDE_DIRS} ${CMAKE_CURRENT_BINARY_DIR} ${JSSC_ADDITIONAL_INCLUDES})
 
