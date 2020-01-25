@@ -36,3 +36,7 @@ target/
 
 # IDE files: eclipse
 .settings/
+
+
+/libjssc/*SerialNativeInterface.h
+/libjssc/**/*SerialNativeInterface.h
