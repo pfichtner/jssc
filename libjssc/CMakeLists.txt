@@ -85,7 +85,7 @@ if(NOT NATIVE_LIB_DIR)
 	endif()
 	SET(NATIVE_LIB_DIR ${OS_NAME}_${OS_BITS})
 endif()
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/classes/natives)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../../classes/natives)
 
 # version.h using #cmakedefine for version from pom.xml.
 set(JSSC_VERSION "0.0.0-UNKNOWN")
