@@ -88,12 +88,6 @@
     </dependencies>
 
     <build>
-        <resources>
-            <resource>
-                <directory>${project.basedir}/src/main/resources-precompiled</directory>
-            </resource>
-        </resources>
-
         <extensions>
             <extension>
                 <groupId>kr.motd.maven</groupId>
@@ -103,127 +97,10 @@
         </extensions>
 
         <plugins>
-            <!-- create header file jdk<=8 -->
-            <plugin>
-                <groupId>com.github.maven-nar</groupId>
-                <artifactId>nar-maven-plugin</artifactId>
-                <version>${plugin.nar.version}</version>
-                <extensions>true</extensions>
-                <executions>
-                    <execution>
-                        <id>default-nar-javah</id>
-                        <goals>
-                            <goal>nar-javah</goal>
-                        </goals>
-                        <!-- was compile -->
-                        <phase>none</phase>
-                        <configuration>
-                            <skip>${javah.skip}</skip>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
             <!-- execute cmake -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-antrun-plugin</artifactId>
-
-                <executions>
-                    <execution>
-                        <id>cmake-generate</id>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                        <phase>generate-sources</phase>
-                        <configuration>
-                            <skip>${cmake.generate.skip}</skip>
-                            <target name="cmake-generate">
-                                <mkdir dir="${cmake.generated.directory}"/>
-                                <exec executable="cmake" dir="${cmake.generated.directory}" failonerror="true">
-                                    <arg line="${project.basedir}"/>
-                                    <arg line="${cmake.generate.args}"/>
-                                    <arg line="${cmake.generate.extra}"/>
-                                </exec>
-                            </target>
-                        </configuration>
-                    </execution>
-
-                    <execution>
-                        <id>cmake-compile</id>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                        <phase>none</phase>
-                        <configuration>
-                            <skip>${cmake.compile.skip}</skip>
-                            <target name="cmake-build">
-                                <!-- copy header jdk<=8 -->
-                                <copy todir="${cmake.generated.directory}" flatten="true" overwrite="true"
-                                      verbose="true" failonerror="false">
-                                    <fileset dir="${project.build.directory}/nar/" includes="**/*.h"/>
-                                </copy>
-                                <exec executable="cmake" dir="${cmake.generated.directory}" failonerror="true">
-                                    <arg line="--build"/>
-                                    <arg line="."/>
-                                    <arg line="${cmake.build.args}"/>
-                                </exec>
-                            </target>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <configuration>
-                    <doclint>none</doclint>
-                    <!-- workaround for https://bugs.openjdk.java.net/browse/JDK-8212233 -->
-                    <javaApiLinks>
-                        <property>
-                            <name>foo</name>
-                            <value>bar</value>
-                        </property>
-                    </javaApiLinks>
-                </configuration>
-            </plugin>
-
-            <!-- package the uber-jar -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-assembly-plugin</artifactId>
-
-                <executions>
-                    <execution>
-                        <id>make-assembly</id>
-                        <phase>none</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                        <configuration>
-                            <skipAssembly>${cmake.generate.skip}</skipAssembly>
-                            <descriptors>
-                                <descriptor>${project.basedir}/src/assembly/one-off-jar.xml</descriptor>
-                            </descriptors>
-                        </configuration>
-                    </execution>
-
-                    <execution>
-                        <id>fat-jar</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                        <configuration>
-                            <skipAssembly>${jar.dependencies.skip}</skipAssembly>
-                            <descriptorRefs>
-                                <descriptorRef>jar-with-dependencies</descriptorRef>
-                            </descriptorRefs>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
 
         </plugins>
