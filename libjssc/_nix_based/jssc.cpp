@@ -52,7 +52,7 @@
 /*
  * Get native library version
  */
-JNIEXPORT jstring JNICALL Java_jssc_SerialNativeInterface_getNativeLibraryVersion(JNIEnv *env, jclass clazz) {
+JNIEXPORT jstring JNICALL Java_io_github_java_native_jssc_header_SerialNativeInterface_getNativeLibraryVersion(JNIEnv *env, jclass clazz) {
     return env->NewStringUTF(JSSC_VERSION);
 }
 
@@ -62,7 +62,7 @@ JNIEXPORT jstring JNICALL Java_jssc_SerialNativeInterface_getNativeLibraryVersio
  * 
  * In 2.2.0 added useTIOCEXCL
  */
-JNIEXPORT jlong JNICALL Java_jssc_SerialNativeInterface_openPort(JNIEnv *env, jobject object, jstring portName, jboolean useTIOCEXCL){
+JNIEXPORT jlong JNICALL Java_io_github_java_native_jssc_header_SerialNativeInterface_openPort(JNIEnv *env, jobject object, jstring portName, jboolean useTIOCEXCL){
     const char* port = env->GetStringUTFChars(portName, JNI_FALSE);
     jlong hComm = open(port, O_RDWR | O_NOCTTY | O_NDELAY);
     if(hComm != -1){
@@ -80,23 +80,23 @@ JNIEXPORT jlong JNICALL Java_jssc_SerialNativeInterface_openPort(JNIEnv *env, jo
         }
         else {
             close(hComm);//since 2.7.0
-            hComm = jssc_SerialNativeInterface_ERR_INCORRECT_SERIAL_PORT;//-4;
+            hComm = io_github_java_native_jssc_header_SerialNativeInterface_ERR_INCORRECT_SERIAL_PORT;//-4;
         }
         delete settings;
         //<- since 2.2.0
     }
     else {//since 0.9 ->
         if(errno == EBUSY){//Port busy
-            hComm = jssc_SerialNativeInterface_ERR_PORT_BUSY;//-1
+            hComm = io_github_java_native_jssc_header_SerialNativeInterface_ERR_PORT_BUSY;//-1
         }
         else if(errno == ENOENT){//Port not found
-            hComm = jssc_SerialNativeInterface_ERR_PORT_NOT_FOUND;//-2;
+            hComm = io_github_java_native_jssc_header_SerialNativeInterface_ERR_PORT_NOT_FOUND;//-2;
         }//-> since 2.2.0
         else if(errno == EACCES){//Permission denied
-            hComm = jssc_SerialNativeInterface_ERR_PERMISSION_DENIED;//-3;
+            hComm = io_github_java_native_jssc_header_SerialNativeInterface_ERR_PERMISSION_DENIED;//-3;
         }
         else {
-            hComm = jssc_SerialNativeInterface_ERR_PORT_NOT_FOUND;//-2;
+            hComm = io_github_java_native_jssc_header_SerialNativeInterface_ERR_PORT_NOT_FOUND;//-2;
         }//<- since 2.2.0
     }//<- since 0.9
     env->ReleaseStringUTFChars(portName, port);
@@ -239,7 +239,7 @@ const jint PARAMS_FLAG_PARMRK = 2;
  *
  * In 2.6.0 added flags parameter
  */
-JNIEXPORT jboolean JNICALL Java_jssc_SerialNativeInterface_setParams
+JNIEXPORT jboolean JNICALL Java_io_github_java_1native_jssc_header_SerialNativeInterface_setParams
   (JNIEnv *env, jobject object, jlong portHandle, jint baudRate, jint byteSize, jint stopBits, jint parity, jboolean setRTS, jboolean setDTR, jint flags){
     jboolean returnValue = JNI_FALSE;
     
@@ -421,7 +421,7 @@ const jint PURGE_TXCLEAR = 0x0004;
 /*
  * PurgeComm
  */
-JNIEXPORT jboolean JNICALL Java_jssc_SerialNativeInterface_purgePort
+JNIEXPORT jboolean JNICALL Java_io_github_java_1native_jssc_header_SerialNativeInterface_purgePort
   (JNIEnv *env, jobject object, jlong portHandle, jint flags){
     int clearValue = -1;
     if((flags & PURGE_RXCLEAR) && (flags & PURGE_TXCLEAR)){
@@ -444,7 +444,7 @@ JNIEXPORT jboolean JNICALL Java_jssc_SerialNativeInterface_purgePort
 
 /* OK */
 /* Closing the port */
-JNIEXPORT jboolean JNICALL Java_jssc_SerialNativeInterface_closePort
+JNIEXPORT jboolean JNICALL Java_io_github_java_1native_jssc_header_SerialNativeInterface_closePort
   (JNIEnv *env, jobject object, jlong portHandle){
 #if defined TIOCNXCL //&& !defined __SunOS
     ioctl(portHandle, TIOCNXCL);//since 2.1.0 Clear exclusive port access on closing
@@ -456,7 +456,7 @@ JNIEXPORT jboolean JNICALL Java_jssc_SerialNativeInterface_closePort
 /*
  * Setting events mask
  */
-JNIEXPORT jboolean JNICALL Java_jssc_SerialNativeInterface_setEventsMask
+JNIEXPORT jboolean JNICALL Java_io_github_java_1native_jssc_header_SerialNativeInterface_setEventsMask
   (JNIEnv *env, jobject object, jlong portHandle, jint mask){
     //Don't needed in linux, implemented in java code
     return JNI_TRUE;
@@ -466,7 +466,7 @@ JNIEXPORT jboolean JNICALL Java_jssc_SerialNativeInterface_setEventsMask
 /*
  * Getting events mask
  */
-JNIEXPORT jint JNICALL Java_jssc_SerialNativeInterface_getEventsMask
+JNIEXPORT jint JNICALL Java_io_github_java_1native_jssc_header_SerialNativeInterface_getEventsMask
   (JNIEnv *env, jobject object, jlong portHandle){
     //Don't needed in linux, implemented in java code
     return -1;
@@ -476,7 +476,7 @@ JNIEXPORT jint JNICALL Java_jssc_SerialNativeInterface_getEventsMask
 /* 
  * RTS line status changing (ON || OFF)
  */
-JNIEXPORT jboolean JNICALL Java_jssc_SerialNativeInterface_setRTS
+JNIEXPORT jboolean JNICALL Java_io_github_java_1native_jssc_header_SerialNativeInterface_setRTS
   (JNIEnv *env, jobject object, jlong portHandle, jboolean enabled){
     int returnValue = 0;
     int lineStatus;
@@ -495,7 +495,7 @@ JNIEXPORT jboolean JNICALL Java_jssc_SerialNativeInterface_setRTS
 /* 
  * DTR line status changing (ON || OFF)
  */
-JNIEXPORT jboolean JNICALL Java_jssc_SerialNativeInterface_setDTR
+JNIEXPORT jboolean JNICALL Java_io_github_java_1native_jssc_header_SerialNativeInterface_setDTR
   (JNIEnv *env, jobject object, jlong portHandle, jboolean enabled){
     int returnValue = 0;
     int lineStatus;
@@ -514,7 +514,7 @@ JNIEXPORT jboolean JNICALL Java_jssc_SerialNativeInterface_setDTR
 /*
  * Writing data to the port
  */
-JNIEXPORT jboolean JNICALL Java_jssc_SerialNativeInterface_writeBytes
+JNIEXPORT jboolean JNICALL Java_io_github_java_1native_jssc_header_SerialNativeInterface_writeBytes
   (JNIEnv *env, jobject object, jlong portHandle, jbyteArray buffer){
     jbyte* jBuffer = env->GetByteArrayElements(buffer, JNI_FALSE);
     jint bufferSize = env->GetArrayLength(buffer);
@@ -529,7 +529,7 @@ JNIEXPORT jboolean JNICALL Java_jssc_SerialNativeInterface_writeBytes
  *
  * Rewrited in 2.5.0 (using select() function for correct block reading in MacOS X)
  */
-JNIEXPORT jbyteArray JNICALL Java_jssc_SerialNativeInterface_readBytes
+JNIEXPORT jbyteArray JNICALL Java_io_github_java_1native_jssc_header_SerialNativeInterface_readBytes
   (JNIEnv *env, jobject object, jlong portHandle, jint byteCount){
     fd_set read_fd_set;
     jbyte *lpBuffer = new jbyte[byteCount];
@@ -554,7 +554,7 @@ JNIEXPORT jbyteArray JNICALL Java_jssc_SerialNativeInterface_readBytes
 /*
  * Get bytes count in serial port buffers (Input and Output)
  */
-JNIEXPORT jintArray JNICALL Java_jssc_SerialNativeInterface_getBuffersBytesCount
+JNIEXPORT jintArray JNICALL Java_io_github_java_1native_jssc_header_SerialNativeInterface_getBuffersBytesCount
   (JNIEnv *env, jobject object, jlong portHandle){
     jint returnValues[2];
     returnValues[0] = -1; //Input buffer
@@ -576,7 +576,7 @@ const jint FLOWCONTROL_XONXOFF_OUT = 8;
 /*
  * Setting flow control mode
  */
-JNIEXPORT jboolean JNICALL Java_jssc_SerialNativeInterface_setFlowControlMode
+JNIEXPORT jboolean JNICALL Java_io_github_java_1native_jssc_header_SerialNativeInterface_setFlowControlMode
   (JNIEnv *env, jobject object, jlong portHandle, jint mask){
     jboolean returnValue = JNI_FALSE;
     termios *settings = new termios();
@@ -606,7 +606,7 @@ JNIEXPORT jboolean JNICALL Java_jssc_SerialNativeInterface_setFlowControlMode
 /*
  * Getting flow control mode
  */
-JNIEXPORT jint JNICALL Java_jssc_SerialNativeInterface_getFlowControlMode
+JNIEXPORT jint JNICALL Java_io_github_java_1native_jssc_header_SerialNativeInterface_getFlowControlMode
   (JNIEnv *env, jobject object, jlong portHandle){
     jint returnValue = 0;
     termios *settings = new termios();
@@ -628,7 +628,7 @@ JNIEXPORT jint JNICALL Java_jssc_SerialNativeInterface_getFlowControlMode
 /*
  * Send break for setted duration
  */
-JNIEXPORT jboolean JNICALL Java_jssc_SerialNativeInterface_sendBreak
+JNIEXPORT jboolean JNICALL Java_io_github_java_1native_jssc_header_SerialNativeInterface_sendBreak
   (JNIEnv *env, jobject object, jlong portHandle, jint duration){
     jboolean returnValue = JNI_FALSE;
     if(duration > 0){
@@ -716,7 +716,7 @@ const jint events[] = {INTERRUPT_BREAK,
  * Collecting data for EventListener class (Linux have no implementation of "WaitCommEvent" function from Windows)
  * 
  */
-JNIEXPORT jobjectArray JNICALL Java_jssc_SerialNativeInterface_waitEvents
+JNIEXPORT jobjectArray JNICALL Java_io_github_java_1native_jssc_header_SerialNativeInterface_waitEvents
   (JNIEnv *env, jobject object, jlong portHandle) {
 
     jclass intClass = env->FindClass("[I");
@@ -824,7 +824,7 @@ JNIEXPORT jobjectArray JNICALL Java_jssc_SerialNativeInterface_waitEvents
 /*
  * Getting serial ports names like an a String array (String[])
  */
-JNIEXPORT jobjectArray JNICALL Java_jssc_SerialNativeInterface_getSerialPortNames
+JNIEXPORT jobjectArray JNICALL Java_io_github_java_1native_jssc_header_SerialNativeInterface_getSerialPortNames
   (JNIEnv *env, jobject object){
     //Don't needed in linux, implemented in java code (Note: null will be returned)
     return NULL;
@@ -839,7 +839,7 @@ JNIEXPORT jobjectArray JNICALL Java_jssc_SerialNativeInterface_getSerialPortName
  * returnValues[2] - RING
  * returnValues[3] - RLSD(DCD)
  */
-JNIEXPORT jintArray JNICALL Java_jssc_SerialNativeInterface_getLinesStatus
+JNIEXPORT jintArray JNICALL Java_io_github_java_1native_jssc_header_SerialNativeInterface_getLinesStatus
   (JNIEnv *env, jobject object, jlong portHandle){
     jint returnValues[4];
     for(jint i = 0; i < 4; i++){
