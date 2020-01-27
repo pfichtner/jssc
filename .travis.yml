@@ -3,14 +3,17 @@ language: java
 env:
   global:
     - JABBA_HOME=/home/travis/.jabba
+    - secure: "mNFfxwnBE+AixYqwpVrOqzhFlZW3ThXYX76B27Y35aoQYd7Jo8oIg/mMksu6fP7DnbeN2kGYCw/HB9+SHQ+3u4K6mMdvxjBgVzC1Qt5RCZ8w4FDofJz3YvPXnA5pyXbEIRVuOGU1ndiBYFjYnsaaZ6sbXnmypDBHrqRtM86w4fNe7osSoHAkw1UhNjLJmr5tGf8UGvHtE3aDl/sqjaoXoi1c8mm9WnswZU5MAeKH955TDtK5tG8IQv0LJPXuimcxFOhr+SZsepJEikdFaU8OC/heNB7cmUDCNkOz6as6BTHtY2C590DNk7Kcyn4kdAbFYP3IX22ALi4LaB+6riL6EdYBsqEdgeHZcONyjGRhoJxbx6Ylo1B5ei9Ov3fn9XNQkHqaB3AylZMX7XCtsbTwLYI9jbZLGG8Dr02iGzkkKrrPIx1Bv2q6iKXT/rumELwiiiSqZld9Zo+l1aYgSWZc2eHp7LgBEaJ0cTqS/W4rxKpfxIDMUHKmUn9w0hO0ayoBOzktwjlFIkb4oluOZRIoAh2yH6X9AHOS0x4rBQgT2yQ8FZiLRR31BUYPg9oE6ny+GBzNZ8Otnm/XtapOTNgXFecbF9oHvZ17cIS6JlUfv+BQxByBIkH6sVa6jXR8jN/nyi+2XVgBKGWzYR40c7Hz1Boaibhw3bXq8OBUn5FSJ4Y="
+    - secure: "RuKQEHq0Va81DHZq1UJ3Hsz3haTnoDherlD6fPtCpL0QjLSjxDtpav1LgFTfKwSOgz3RsKlOr6t/Mg5xHGWSUPzNh67JWKRUMULM+SHxAkx/VZpgpJXUpxhP19XR3zoHDnpIOPbOV9uwi7f7EFiufIua7oCxAbYhGRiUam76BV5vw3LCmP3CLFjjxCiapKHck9Icik8R1W3pG1FcUpY+MHFPMIWNR95EKsK6WKV9B9RK1dN6+jNrXi16egiB3V4/KfoxFWr/Drc0H8cZB8PHqU+vNn5F3TTUjddtoN2yEIPPpKWd2MOdPmJ+aAAqg/VqVHlzZY1ofMfy3hW21y3x2pmeRtfaqJb3sS6B08gEka9N5pZZfAaNtqNWRgootxZFnldVKlOIrXRFmRuM2R3C6p9pBFbFQhVVzJBPRu7A/L0oWSqG7V2LTZJaSUjdQW36kVYdDqMDx87vpddc7Im409y3KfZtBJ8kjSLOzlNwxaXP4Fkm0G8ne0gE9n7zTkyBheycvXcE6kJ4DRwpYXYz1bVw5JgM3liOIMacKIpmCdTlWjTbsX2wA/B+ZxvCJkO8MNVLAZ5EH0/Hcb7G4XIpTcJhj6TaSgd8YYyncnD4jQWMuZX27eaAmLXcv5YFCd3dfYMCcqUNKtFbEvzPNkX3WTpPFI66cYpH8VqJPMDT8jQ="
+    - secure: "LCZ2OXMNC4ZjnswL8SFrsgEDnjy8ObSCan58xMOYIJaccMqrCGKbdfxYM+5I/XdUrMC5bFEfRwjJ78ouo81Kv+CIN1CbEqahH+uHJFuyViNE4FFczASeW6xwh2FdPA5DxyyDToTWM+uJ7sMnsHCZKordojG9mD4sNDbc8viF0TaSsz/e3yJ2+u1J0gPO09mk3P04nDbr4ixRqcj/nRIzmU3IOVvVjNt5Yw9X9RMnYM2BsnZTczVrwwDOWrzutKF+2mtVcMCW7vlKVG6VCUN01w3FKvyWOgb0jkt5IhzPxqfw55C00zQayaRq+He1fzVMjaSSDcS0f/9gjB93sZAzwMB5m3vf5fWP1Yp3svpcre6X/ioupsftJ/whfvkapdm2WKKDG5c6dB5ul/M3eWOwdaxB8SvL0sQ+N5rFxNjFBLgu0Y3r+uObhE4yGjPE2RRMrfHtDrCzVyt5BHzeXA8QXdQep+SrbapSd8qER42KPBJOBsEWPEClweT6w4c6iLYWNN74qIuK8SE1I35RrFJ8diPHvm035qeteZ/3/dYEvi+NqBf7/GzDc29IcElnqrIjlMSp/HgNZ6ZFbJrqm0cZSVwddmLAR3S4BdZTps5Dy4C8LQBXZUi7Gn8ZhC7zMrHJEQxJCHRWoBL33JG/YKjj9ldMNNoqUriwYshCquGJVvE="
 
 cache:
   directories:
-    - $HOME/.m2
+    - "$HOME/.m2"
 
 before_cache:
-  - rm -rf $HOME/.m2/repository/com/github/java-native
-  - rm -rf $HOME/.m2/repository/io/github/java-native
+  - rm -rf "$HOME/.m2/repository/com/github/java-native"
+  - rm -rf "$HOME/.m2/repository/io/github/java-native"
 
 matrix:
   include:
@@ -24,37 +27,23 @@ matrix:
           packages:
             - cmake
             - g++
-    - os: linux
-      dist: bionic
-      arch: amd64
-      env:
-        - TRAVIS_JDK=adopt-openj9@1.11.0-5
-      addons:
-        apt:
-          packages:
-            - cmake
-            - g++
-    - os: linux
-      dist: bionic
-      arch: amd64
-      env:
-        - TRAVIS_JDK=openjdk@1.14.0-32
-      addons:
-        apt:
-          packages:
-            - cmake
-            - g++
 
 before_install:
-  - curl -sL https://raw.githubusercontent.com/shyiko/jabba/0.11.0/install.sh | bash && . ~/.jabba/jabba.sh
+  - curl -sL "https://raw.githubusercontent.com/shyiko/jabba/0.11.0/install.sh" | bash && . $JABBA_HOME/jabba.sh
 
 install:
-  - $JABBA_HOME/bin/jabba install $TRAVIS_JDK
+  - "$JABBA_HOME/bin/jabba" install "$TRAVIS_JDK"
   # this is blocked by MDEP-204. - ./mvnw dependency:go-offline
 
-script: ./mvnw --batch-mode clean verify
+script:
+  - ./mvnw --batch-mode -Pdocs,deploy -Dgpg.skip=true clean verify
 
 after_success:
-  - bash <(curl -s https://codecov.io/bash)
-
-
+  - |
+    if [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ "$TRAVIS_TAG" == "" ]; then
+      bash <(curl -s https://codecov.io/bash)
+      openssl aes-256-cbc -K $encrypted_c1b5595f9a02_key -iv $encrypted_c1b5595f9a02_iv -in .deployment/signingkey.asc.enc -out ../java-native-signing-key.gnupg.asc -d
+      gpg --batch --keyring=$TRAVIS_BUILD_DIR/pubring.gpg --no-default-keyring --import .deployment/signingkey.asc
+      gpg --batch --allow-secret-key-import --keyring=$TRAVIS_BUILD_DIR/secring.gpg --no-default-keyring --import .deployment/signingkey.asc
+      ./mvnw --batch-mode -Pdocs,deploy --settings .deployment/m2-settings.xml -Dgpg.publicKeyring=$TRAVIS_BUILD_DIR/pubring.gpg -Dgpg.secretKeyring=$TRAVIS_BUILD_DIR/secring.gpg -Dgpg.keyname=0x196A72C1 -Dgpg.passphrase="$GPG_PASSPHRASE" deploy
+    fi
