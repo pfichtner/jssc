@@ -257,7 +257,17 @@
             <build>
                 <plugins>
                     <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
                     </plugin>
                     <plugin>
                         <artifactId>maven-source-plugin</artifactId>
@@ -268,10 +278,6 @@
                     <plugin>
                         <groupId>org.sonatype.plugins</groupId>
                         <artifactId>nexus-staging-maven-plugin</artifactId>
-                    </plugin>
-                    <plugin>
-                        <!-- has no impact unless "mvn site" used (typically only for packaging=maven-plugin artifacts) -->
-                        <artifactId>maven-site-plugin</artifactId>
                     </plugin>
                 </plugins>
             </build>
