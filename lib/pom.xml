@@ -50,7 +50,6 @@
         <os.detected.bitness>${sun.arch.data.model}</os.detected.bitness>
 
         <!-- dependency versions a-z -->
-        <dependency.junit.version>4.12</dependency.junit.version>
         <dependency.logback.version>1.2.3</dependency.logback.version>
         <dependency.nativelibloader.version>2.3.3</dependency.nativelibloader.version>
 
@@ -74,9 +73,13 @@
             <version>${dependency.nativelibloader.version}</version>
         </dependency>
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>${dependency.junit.version}</version>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
