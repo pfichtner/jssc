@@ -66,6 +66,10 @@
         <!-- 3rd-party plugins -->
         <plugin.animalsniffer.version>1.17</plugin.animalsniffer.version>
         <plugin.nexus-staging.version>1.6.8</plugin.nexus-staging.version>
+
+        <!-- for OSX, set these options to \-\-pinentry-mode and loopback -->
+        <gpg.pinentrymode />
+        <gpg.pinentrymode.loopback />
     </properties>
 
     <build>
@@ -253,6 +257,19 @@
         </profile>
 
         <profile>
+            <id>osx-pinentry-mode</id>
+            <activation>
+                <os>
+                    <family>mac</family>
+                </os>
+            </activation>
+            <properties>
+                <gpg.pinentrymode>--pinentry-mode</gpg.pinentrymode>
+                <gpg.pinentrymode.loopback>loopback</gpg.pinentrymode.loopback>
+            </properties>
+        </profile>
+
+        <profile>
             <id>deploy</id>
             <build>
                 <plugins>
@@ -268,8 +285,8 @@
                                 </goals>
                                 <configuration>
                                      <gpgArguments>
-                                         <arg>--pinentry-mode</arg>
-                                         <arg>loopback</arg>
+                                         <arg>${gpg.pinentrymode}</arg>
+                                         <arg>${gpg.pinentrymode.loopback}</arg>
                                      </gpgArguments>
                                 </configuration>
                             </execution>
