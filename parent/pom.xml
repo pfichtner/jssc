@@ -55,6 +55,7 @@
         <plugin.maven.assembly.version>3.1.1</plugin.maven.assembly.version>
         <plugin.maven.compiler.version>3.8.1</plugin.maven.compiler.version>
         <plugin.maven.dependency.version>3.1.1</plugin.maven.dependency.version>
+        <plugin.maven.deploy.version>3.0.0-M1</plugin.maven.deploy.version>
         <plugin.maven.enforcer.version>3.0.0-M3</plugin.maven.enforcer.version>
         <plugin.maven.gpg.version>1.6</plugin.maven.gpg.version>
         <plugin.maven.jar.version>3.2.0</plugin.maven.jar.version>
@@ -137,6 +138,16 @@
                     <artifactId>maven-gpg-plugin</artifactId>
                     <version>${plugin.maven.gpg.version}</version>
                 </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-deploy-plugin</artifactId>
+                    <version>${plugin.maven.deploy.version}</version>
+                    <configuration>
+                        <deployAtEnd>true</deployAtEnd>
+                    </configuration>
+                </plugin>
+
 
                 <!-- 3rd-party -->
 

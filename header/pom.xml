@@ -39,6 +39,7 @@
     <properties>
         <!-- custom directories and file paths a-z -->
         <header.generated.directory>${project.build.directory}/classes</header.generated.directory>
+        <header.deploy.skip>false</header.deploy.skip>
     </properties>
 
     <build>
@@ -60,6 +61,15 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <configuration>
+                    <deployAtEnd>true</deployAtEnd>
+                    <skip>${header.deploy.skip}</skip>
+                </configuration>
             </plugin>
 
         </plugins>
