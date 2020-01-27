@@ -40,7 +40,18 @@
         <!-- custom directories and file paths a-z -->
         <header.generated.directory>${project.build.directory}/classes</header.generated.directory>
         <header.deploy.skip>false</header.deploy.skip>
+
+        <!-- dependency versions -->
+        <dependency.nativelibloader.version>2.3.3</dependency.nativelibloader.version>
     </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.scijava</groupId>
+            <artifactId>native-lib-loader</artifactId>
+            <version>${dependency.nativelibloader.version}</version>
+        </dependency>
+    </dependencies>
 
     <build>
         <plugins>

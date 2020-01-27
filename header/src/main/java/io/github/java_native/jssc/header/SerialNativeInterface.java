@@ -19,6 +19,10 @@
 
 package io.github.java_native.jssc.header;
 
+import org.scijava.nativelib.NativeLoader;
+
+import java.io.IOException;
+
 public class SerialNativeInterface {
 
     private static final String libVersion = "2.9";
@@ -29,7 +33,7 @@ public class SerialNativeInterface {
     public static final int OS_SOLARIS = 2;//since 0.9.0
     public static final int OS_MAC_OS_X = 3;//since 0.9.0
 
-    private static final int osType = -1;
+    private static int osType = -1;
 
     /**
      * @since 2.3.0
@@ -60,6 +64,23 @@ public class SerialNativeInterface {
      * @since 2.6.0
      */
     public static final String PROPERTY_JSSC_PARMRK = "JSSC_PARMRK";
+
+    static {
+        String osName = System.getProperty("os.name");
+        if(osName.equals("Linux"))
+            osType = OS_LINUX;
+        else if(osName.startsWith("Win"))
+            osType = OS_WINDOWS;
+        else if(osName.equals("SunOS"))
+            osType = OS_SOLARIS;
+        else if(osName.equals("Mac OS X") || osName.equals("Darwin"))
+            osType = OS_MAC_OS_X;
+        try {
+            NativeLoader.loadLibrary("jssc");
+        } catch (IOException ioException) {
+            throw new UnsatisfiedLinkError("Could not load the jssc library: " + ioException.getMessage());
+        }
+    }
 
     /**
      * Get OS type (OS_LINUX || OS_WINDOWS || OS_SOLARIS)

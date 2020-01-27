@@ -61,31 +61,7 @@ else()
 	set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2")
 endif()
 
-# Detect platform if -DNATIVE_LIB_DIR is not provided
-# TODO: Handle arm, hardfloat, etc
-if(NOT NATIVE_LIB_DIR)
-	# windows, linux, darwin, etc
-	string(TOLOWER "${CMAKE_SYSTEM_NAME}" OS_NAME)
-	if(OS_NAME MATCHES "darwin")
-		set(OS_NAME "osx")
-	endif()
-
-	# 32-bit or 64-bit
-	#FIXME: Might fail on cross-compile
-	if(FORCE_M32)
-		set(OS_BITS 32)
-	elseif(FORCE_M64)
-		set(OS_BITS 64)
-	else()
-		if("${CMAKE_SIZEOF_VOID_P}" EQUAL "8")
-			set(OS_BITS 64)
-		else()
-			set(OS_BITS 32)
-		endif()
-	endif()
-	SET(NATIVE_LIB_DIR ${OS_NAME}_${OS_BITS})
-endif()
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../../classes/natives)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY $ENV{CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 
 # version.h using #cmakedefine for version from pom.xml.
 set(JSSC_VERSION "0.0.0-UNKNOWN")
