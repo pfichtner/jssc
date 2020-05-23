@@ -58,11 +58,6 @@ matrix:
           packages:
             - cmake
             - g++-powerpc64le-linux-gnu
-    - os: osx
-      addons:
-        homebrew:
-          packages:
-            - cmake
 
 install:
   - mvn dependency:resolve
